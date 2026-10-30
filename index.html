@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>meercat.ru — дом суриката</title>
+<meta name="description" content="Ничего полезного. Только сурикаты: смешные факты, фотографии и немного песка.">
+<meta name="theme-color" content="#f7f1e6">
+<meta property="og:title" content="meercat.ru — дом суриката">
+<meta property="og:description" content="Смешные факты о сурикатах и их фотографии. Без рекламы, без подписок — просто сурикаты.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://meercat.ru/img/meerkats/m1.webp">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<style>
+  :root{
+    --sand:#f7f1e6; --sand2:#efe4d0; --ink:#241c13; --ink2:#5b4c3a; --dim:#8a7761;
+    --line:rgba(90,70,40,.16); --accent:#d98324; --accent2:#b8541f; --green:#7a8b3a;
+    --card:#fffdf8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--sand); color:var(--ink); font-size:17px; line-height:1.65;
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; overflow-x:hidden;
+    background-image:
+      radial-gradient(800px 500px at 85% -10%, rgba(217,131,36,.13), transparent 62%),
+      radial-gradient(700px 460px at -10% 10%, rgba(122,139,58,.10), transparent 60%);
+    background-attachment:fixed;
+  }
+  a{color:inherit}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+
+  header{position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);
+    background:rgba(247,241,230,.86);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:14px;height:68px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;text-decoration:none}
+  .brand img{width:40px;height:40px;border-radius:50%;box-shadow:0 4px 12px rgba(90,70,40,.22)}
+  .brand span{font-size:18px;letter-spacing:.2px}
+  .brand b{color:var(--accent2)}
+  .navlinks{display:flex;gap:22px;margin-left:auto;font-size:15px;color:var(--ink2)}
+  .navlinks a{text-decoration:none}
+  .navlinks a:hover{color:var(--accent2)}
+  .pill{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 16px;
+    font-size:14.5px;text-decoration:none;font-weight:600}
+  @media(max-width:760px){.navlinks{display:none}}
+  @media(max-width:520px){.pill{display:none}.brand span{font-size:17px}}
+
+  /* герой */
+  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;padding:52px 0 34px}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;
+    color:var(--accent2);background:rgba(217,131,36,.12);border:1px solid rgba(217,131,36,.3);
+    border-radius:999px;padding:7px 14px;margin-bottom:18px}
+  h1{font-size:clamp(38px,6vw,62px);line-height:1.02;letter-spacing:-1.6px;font-weight:900}
+  h1 em{font-style:normal;color:var(--accent)}
+  .lead{color:var(--ink2);font-size:19px;margin:20px 0 26px;max-width:32em}
+  .cta{display:flex;gap:12px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:9px;border-radius:14px;padding:14px 22px;
+    font-weight:800;font-size:16px;text-decoration:none;border:none;cursor:pointer;transition:.18s}
+  .btn.primary{background:var(--ink);color:var(--sand)}
+  .btn.primary:hover{transform:translateY(-2px)}
+  .btn.line{border:1.5px solid var(--line);color:var(--ink);background:var(--card)}
+  .btn.line:hover{background:#fff}
+  .photo{position:relative}
+  .photo .frame{background:#fff;padding:10px 10px 44px;border-radius:6px;
+    box-shadow:0 22px 44px rgba(90,70,40,.26);transform:rotate(-2.2deg);transition:transform .3s}
+  .photo:hover .frame{transform:rotate(0deg) translateY(-4px)}
+  .photo img{width:100%;display:block;border-radius:3px}
+  .photo .cap{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:14px;color:var(--ink2);
+    font-style:italic}
+  @media(max-width:860px){
+    .hero{grid-template-columns:1fr;gap:26px;padding:32px 0 20px;text-align:center}
+    .lead{margin-inline:auto}.cta{justify-content:center}
+    .photo{order:-1;max-width:420px;margin:0 auto}
+  }
+
+  /* цифры */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:8px 0 40px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px}
+  .stat b{display:block;font-size:23px;color:var(--accent2);letter-spacing:-.5px}
+  .stat span{font-size:13.5px;color:var(--dim)}
+
+  section{padding:34px 0}
+  .h2{font-size:clamp(26px,3.6vw,38px);letter-spacing:-.8px;font-weight:900;margin-bottom:8px}
+  .sub{color:var(--ink2);margin-bottom:26px;max-width:46em}
+
+  /* факты */
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}
+  .fact{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;
+    transition:transform .18s, box-shadow .18s;position:relative;overflow:hidden}
+  .fact:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(90,70,40,.14)}
+  .fact .e{font-size:26px;line-height:1;margin-bottom:10px}
+  .fact h3{font-size:17.5px;margin-bottom:6px;letter-spacing:-.2px}
+  .fact p{color:var(--ink2);font-size:15px}
+  .fact .n{position:absolute;right:14px;top:10px;font-size:13px;color:var(--dim);font-weight:700}
+
+  /* галерея */
+  .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .g{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#e7dcc8;
+    cursor:zoom-in;aspect-ratio:4/3}
+  .g img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s}
+  .g:hover img{transform:scale(1.05)}
+  .g .cap{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 12px;font-size:13.5px;color:#fff;
+    background:linear-gradient(180deg,transparent,rgba(30,20,10,.78))}
+  .g.wide{grid-column:span 2;aspect-ratio:16/9}
+  @media(max-width:720px){.g.wide{grid-column:span 1;aspect-ratio:4/3}}
+
+  /* лайтбокс */
+  .lb{position:fixed;inset:0;background:rgba(20,14,8,.9);display:none;align-items:center;justify-content:center;
+    z-index:60;padding:20px;flex-direction:column;gap:12px}
+  .lb.open{display:flex}
+  .lb img{max-width:96vw;max-height:82vh;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  .lb .t{color:#f7f1e6;font-size:14.5px;text-align:center;max-width:80ch}
+  .lb .x{position:absolute;top:16px;right:20px;background:none;border:none;color:#f7f1e6;font-size:30px;cursor:pointer}
+
+  /* врезка */
+  .note{background:linear-gradient(120deg,rgba(217,131,36,.14),rgba(122,139,58,.12));
+    border:1px solid rgba(217,131,36,.28);border-radius:24px;padding:26px 28px;margin:10px 0 30px}
+  .note h3{font-size:clamp(19px,2.4vw,25px);margin-bottom:8px}
+  .note p{color:var(--ink2);font-size:16px;max-width:60em}
+
+  footer{border-top:1px solid var(--line);margin-top:20px;padding:26px 0 44px;color:var(--dim);font-size:13px}
+  footer a{color:var(--ink2);text-decoration:underline}
+  .credits{margin-top:10px;line-height:1.7}
+  .foot{display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;align-items:flex-start}
+
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .55s ease, transform .55s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top">
+      <img src="img/meerkat.webp" alt="сурикат">
+      <span>meercat<b>.ru</b></span>
+    </a>
+    <nav class="navlinks">
+      <a href="#facts">Факты</a>
+      <a href="#photos">Фотографии</a>
+      <a href="#about">Что это</a>
+    </nav>
+    <a class="pill" href="#photos">Смотреть сурикатов</a>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap">
+    <section class="hero">
+      <div>
+        <div class="kicker">🐾 маленький домен про сурикатов</div>
+        <h1>Дом <em>суриката</em></h1>
+        <p class="lead">
+          Здесь нет подписок, рекламы и поводов что-то нажимать. Только сурикаты: смешные факты,
+          их фотографии и один зевающий часовой на главной. Больше на этом домене
+          ничего не происходит — и это лучшее, что с ним случилось.
+        </p>
+        <div class="cta">
+          <a class="btn primary" href="#facts">12 фактов →</a>
+          <a class="btn line" href="#photos">Фотогалерея</a>
+        </div>
+      </div>
+      <div class="photo">
+        <div class="frame">
+          <img src="img/meerkats/m1.webp" alt="Сурикат зевает">
+          <div class="cap">Часовой зевнул. Смена продолжается</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="stats">
+      <div class="stat"><b>25–35 см</b><span>рост стоя</span></div>
+      <div class="stat"><b>600–900 г</b><span>вес взрослого</span></div>
+      <div class="stat"><b>до 30 км/ч</b><span>если очень надо</span></div>
+      <div class="stat"><b>20–30</b><span>сородичей в банде</span></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section id="facts">
+      <h2 class="h2 reveal">12 фактов, после которых сурикат станет любимым зверем</h2>
+      <p class="sub reveal">Все факты настоящие — просто они смешные сами по себе.</p>
+      <div class="facts">
+        <article class="fact reveal"><span class="n">01</span><div class="e">🏘</div><h3>Живут бандой</h3>
+          <p>Двадцать–тридцать сурикатов — одна семья. Вместе роют норы, вместе охраняют территорию и вместе лезут в чужую драку.</p></article>
+        <article class="fact reveal"><span class="n">02</span><div class="e">🕵️</div><h3>Всегда есть часовой</h3>
+          <p>Пока остальные копают, один стоит на задних лапах и смотрит по сторонам. Увидел опасность — тявкает, и банда исчезает в норах.</p></article>
+        <article class="fact reveal"><span class="n">03</span><div class="e">👶</div><h3>Детский сад</h3>
+          <p>Малышей не бросают: кто-то из взрослых остаётся при них, пока остальные работают. Причём нянчит не только мать.</p></article>
+        <article class="fact reveal"><span class="n">04</span><div class="e">🦂</div><h3>Скорпион на обед</h3>
+          <p>Сурикаты едят скорпионов. Сначала отрывают жало, потом трут добычу о песок — чтобы яда не осталось совсем.</p></article>
+        <article class="fact reveal"><span class="n">05</span><div class="e">😎</div><h3>Встроенные очки</h3>
+          <p>Чёрные круги вокруг глаз работают как спортивная раскраска: меньше бликов от солнца — лучше видно ястреба в небе.</p></article>
+        <article class="fact reveal"><span class="n">06</span><div class="e">🏠</div><h3>Нора с десятками дверей</h3>
+          <p>Одна система нор может иметь много входов и выходов. Вылезти можно в любой момент — и не там, где ждут.</p></article>
+        <article class="fact reveal"><span class="n">07</span><div class="e">🦵</div><h3>Хвост вместо стула</h3>
+          <p>Стоять столбиком долго неудобно, поэтому сурикат опирается на хвост — получается третья точка опоры.</p></article>
+        <article class="fact reveal"><span class="n">08</span><div class="e">⛏</div><h3>Экскаватор на четыре лапы</h3>
+          <p>Передними лапами он выгребает песок так быстро, что успевает исчезнуть в норе за пару секунд.</p></article>
+        <article class="fact reveal"><span class="n">09</span><div class="e">🗣</div><h3>Говорят разными голосами</h3>
+          <p>У каждого свой тембр, и сородичи различают друг друга на слух. Это как если бы у вас в семье у всех были разные звонки.</p></article>
+        <article class="fact reveal"><span class="n">10</span><div class="e">🛁</div><h3>Купаются в пыли</h3>
+          <p>Вода — редкость, поэтому гигиена песочная: валяются в пыли, чтобы избавиться от паразитов и просушить шерсть.</p></article>
+        <article class="fact reveal"><span class="n">11</span><div class="e">😴</div><h3>Спят вповалку</h3>
+          <p>Ночью все собираются в кучу, часто в обнимку: так теплее. Пушистый клубок из сурикатов — это не милота ради фото, а способ не замёрзнуть.</p></article>
+        <article class="fact reveal"><span class="n">12</span><div class="e">⏳</div><h3>Долгая жизнь</h3>
+          <p>В природе — 5–10 лет, а там, где суриката кормят и лечат, он доживает до 12–14. Неплохо для зверя размером с кошку.</p></article>
+      </div>
+    </section>
+
+    <section id="photos">
+      <h2 class="h2 reveal">Фотографии</h2>
+      <p class="sub reveal">Нажми на любую — откроется больше.</p>
+      <div class="gallery">
+        <figure class="g wide reveal" data-full="img/meerkats/m4.webp" data-cap="Банда вышла на прогулку: кто-то копает, кто-то смотрит">
+          <img src="img/meerkats/m4.webp" alt="Группа сурикатов" loading="lazy">
+          <figcaption class="cap">Банда вышла на прогулку</figcaption></figure>
+        <figure class="g reveal" data-full="img/meerkats/m2.webp" data-cap="Двойная проверка: если один смотрит, второй тоже посмотрит">
+          <img src="img/meerkats/m2.webp" alt="Два суриката" loading="lazy">
+          <figcaption class="cap">Двойная проверка</figcaption></figure>
+        <figure class="g reveal" data-full="img/meerkats/m3.webp" data-cap="Поймали с поличным — и он это знает">
+          <img src="img/meerkats/m3.webp" alt="Виновный сурикат" loading="lazy">
+          <figcaption class="cap">Поймали с поличным</figcaption></figure>
+        <figure class="g reveal" data-full="img/meerkats/m5.webp" data-cap="Часовой на посту, остальные заняты делом">
+          <img src="img/meerkats/m5.webp" alt="Сурикат на страже" loading="lazy">
+          <figcaption class="cap">Часовой на посту</figcaption></figure>
+        <figure class="g reveal" data-full="img/meerkats/m6.webp" data-cap="Портрет: смотрит так, будто всё про тебя знает">
+          <img src="img/meerkats/m6.webp" alt="Портрет суриката" loading="lazy">
+          <figcaption class="cap">Портрет</figcaption></figure>
+        <figure class="g reveal" data-full="img/meerkats/m7.webp" data-cap="Подросток: любопытный, но ещё маленький">
+          <img src="img/meerkats/m7.webp" alt="Молодой сурикат" loading="lazy">
+          <figcaption class="cap">Подросток</figcaption></figure>
+        <figure class="g reveal" data-full="img/meerkats/m8.webp" data-cap="Классическая стойка: спина прямая, хвост — подпорка">
+          <img src="img/meerkats/m8.webp" alt="Сурикат стоит столбиком" loading="lazy">
+          <figcaption class="cap">Классическая стойка</figcaption></figure>
+      </div>
+    </section>
+
+    <section id="about">
+      <div class="note reveal">
+        <h3>Что это за сайт</h3>
+        <p>
+          Просто страница про сурикатов на личном домене. Никаких аккаунтов, сбора данных, рекламы и
+          «подпишитесь на рассылку» — открыл, посмотрел на зверя, стало легче.
+          Фотографии взяты с Wikimedia Commons под свободными лицензиями, авторы перечислены внизу.
+        </p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div>
+      © <span id="year">2026</span> meercat.ru — дом суриката 🐾
+      <div class="credits">
+        Фото: Изящный сурикат (m1) — Echo Severs, CC BY-SA 4.0 ·
+        m2 — anton dieter, CC BY 2.0 ·
+        m3 — James Arup Photography, CC BY 2.0 ·
+        m4, m5 — Vanadium Erbium, CC BY 4.0 ·
+        m6 — RubenVanKuik, CC BY 4.0 ·
+        m7 — Bernard DUPONT, CC BY-SA 2.0 ·
+        m8 — Ranjith-chemmad, CC BY-SA 4.0 ·
+        все — через Wikimedia Commons
+      </div>
+    </div>
+    <div style="text-align:right">Сделано вручную<br>без единого трекера</div>
+  </div>
+</footer>
+
+<div class="lb" id="lb">
+  <button class="x" id="lbClose">✕</button>
+  <img id="lbImg" src="" alt="">
+  <div class="t" id="lbCap"></div>
+</div>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const io = new IntersectionObserver(es => {
+    es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, {threshold: .12});
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  const lb = document.getElementById('lb'), lbImg = document.getElementById('lbImg'), lbCap = document.getElementById('lbCap');
+  document.querySelectorAll('.g').forEach(g => g.addEventListener('click', () => {
+    lbImg.src = g.dataset.full;
+    lbCap.textContent = g.dataset.cap || '';
+    lb.classList.add('open');
+  }));
+  const close = () => lb.classList.remove('open');
+  document.getElementById('lbClose').onclick = close;
+  lb.addEventListener('click', e => { if (e.target === lb) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+</script>
+</body>
+</html>
