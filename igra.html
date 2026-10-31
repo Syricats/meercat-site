@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Игры сурикатов — meercat.ru</title>
+<meta name="description" content="Две маленькие игры про сурикатов: часовой, который уворачивается от опасностей, и пары по фотографиям.">
+<meta name="theme-color" content="#f7f1e6">
+<link rel="icon" href="img/favicon.png">
+<style>
+  :root{
+    --sand:#f7f1e6; --sand2:#efe4d0; --ink:#241c13; --ink2:#5b4c3a; --dim:#8a7761;
+    --line:rgba(90,70,40,.16); --accent:#d98324; --accent2:#b8541f; --green:#7a8b3a;
+    --card:#fffdf8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--sand); color:var(--ink); font-size:17px; line-height:1.6;
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; overflow-x:hidden;
+    background-image:
+      radial-gradient(800px 500px at 85% -10%, rgba(217,131,36,.13), transparent 62%),
+      radial-gradient(700px 460px at -10% 10%, rgba(122,139,58,.10), transparent 60%);
+    background-attachment:fixed;
+  }
+  a{color:inherit}
+  .wrap{max-width:960px;margin:0 auto;padding:0 18px}
+  header{position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);
+    background:rgba(247,241,230,.9);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:12px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;text-decoration:none}
+  .brand img{width:36px;height:36px;border-radius:50%;box-shadow:0 4px 12px rgba(90,70,40,.22)}
+  .brand b{color:var(--accent2)}
+  .nav .back{margin-left:auto;font-size:14.5px;font-weight:700;text-decoration:none;
+    border:1px solid var(--line);background:var(--card);padding:9px 14px;border-radius:999px}
+  h1{font-size:30px;line-height:1.2;margin:26px 0 6px;letter-spacing:-.4px}
+  h1 span{color:var(--accent2)}
+  .lead{color:var(--ink2);font-size:16px;max-width:620px}
+  .tabs{display:flex;gap:10px;margin:20px 0 14px;flex-wrap:wrap}
+  .tab{background:var(--card);border:1px solid var(--line);color:var(--ink2);font-weight:700;
+    font-size:15px;padding:11px 18px;border-radius:14px;cursor:pointer}
+  .tab.on{background:var(--ink);color:var(--sand);border-color:var(--ink)}
+  .panel{display:none}
+  .panel.on{display:block}
+  .board{position:relative;background:var(--card);border:1px solid var(--line);border-radius:20px;
+    overflow:hidden;box-shadow:0 18px 40px rgba(90,70,40,.10)}
+  #sky{display:block;width:100%;height:430px;touch-action:none;background:
+    linear-gradient(180deg,#f9efdc,#efe0c6 62%,#e2cda6)}
+  .hud{position:absolute;inset:10px 12px auto 12px;display:flex;gap:10px;align-items:center;
+    font-size:14px;font-weight:800;color:var(--ink);pointer-events:none}
+  .hud .pill{background:rgba(255,253,248,.86);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+  .hud .lives{margin-left:auto;letter-spacing:2px}
+  .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:12px;text-align:center;padding:20px;background:rgba(36,28,19,.72);color:var(--sand)}
+  .overlay.hide{display:none}
+  .overlay h2{font-size:22px}
+  .overlay p{font-size:15px;opacity:.9;max-width:340px}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:14px;padding:14px 24px;
+    font-size:16px;font-weight:800;cursor:pointer;background:var(--ink);color:var(--sand)}
+  .btn.line{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .btn:active{transform:translateY(1px)}
+  .overlay .btn{background:var(--accent);color:#fff}
+  .hint{color:var(--dim);font-size:14px;margin-top:10px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}
+  .mcard{position:relative;aspect-ratio:1/1;border-radius:14px;border:1px solid var(--line);
+    background:var(--sand2);cursor:pointer;overflow:hidden;padding:0;perspective:600px}
+  .mcard .inner{position:absolute;inset:0;transition:transform .35s ease;transform-style:preserve-3d}
+  .mcard.flip .inner{transform:rotateY(180deg)}
+  .mcard .side{position:absolute;inset:0;backface-visibility:hidden;display:flex;align-items:center;justify-content:center}
+  .mcard .back{background:linear-gradient(135deg,#e9d6b4,#d8bf95)}
+  .mcard .back img{width:46%;height:46%;object-fit:contain;opacity:.2}
+  .mcard .front{transform:rotateY(180deg);background:#000}
+  .mcard .front img{width:100%;height:100%;object-fit:cover;display:block}
+  .mcard.done .front::after{content:"✓";position:absolute;right:8px;bottom:6px;font-size:18px;color:#fff;
+    text-shadow:0 2px 6px rgba(0,0,0,.6)}
+  .mcard.done{cursor:default;box-shadow:0 0 0 2px var(--green) inset}
+  .mstats{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+  .mstats .pill{background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:7px 13px;font-size:14px;font-weight:700;color:var(--ink2)}
+  .mwin{margin-top:12px;padding:14px 16px;border-radius:14px;background:rgba(122,139,58,.14);
+    border:1px solid rgba(122,139,58,.35);font-weight:700;display:none}
+  .mwin.on{display:block}
+  footer{margin:34px 0 30px;color:var(--dim);font-size:13.5px;display:flex;gap:14px;flex-wrap:wrap}
+  footer a{text-decoration:none;border-bottom:1px dotted var(--dim)}
+  @media (max-width:520px){
+    h1{font-size:25px}
+    #sky{height:360px}
+    .grid{gap:7px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">
+      <img src="img/meerkat.webp" alt="сурикат">
+      <span>meercat<b>.ru</b></span>
+    </a>
+    <a class="back" href="index.html">← На главную</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1>Игры <span>сурикатов</span></h1>
+  <p class="lead">Две маленькие игры: часовой, который уворачивается от опасностей с неба, и пары по фотографиям.
+  Ничего не скачивается, счёт остаётся в твоём браузере.</p>
+
+  <div class="tabs">
+    <button class="tab on" data-panel="watch">Часовой</button>
+    <button class="tab" data-panel="pairs">Пары</button>
+  </div>
+
+  <!-- ЧАСОВОЙ -->
+  <section class="panel on" id="panel-watch">
+    <div class="board">
+      <canvas id="sky"></canvas>
+      <div class="hud">
+        <span class="pill">Очки: <b id="score">0</b></span>
+        <span class="pill">Рекорд: <b id="best">0</b></span>
+        <span class="lives" id="lives">●●●</span>
+      </div>
+      <div class="overlay" id="ov">
+        <h2 id="ovTitle">Часовой на посту</h2>
+        <p id="ovText">Держи палец на экране (или пробел) — сурикат пригнется. Отпустишь — снова встанет и будет смотреть вдаль.</p>
+        <button class="btn" id="ovBtn">Начать</button>
+      </div>
+    </div>
+    <p class="hint">Опасности падают сверху. Пригнись в нужный момент — и сурикат останется целым.</p>
+  </section>
+
+  <!-- ПАРЫ -->
+  <section class="panel" id="panel-pairs">
+    <div class="grid" id="grid"></div>
+    <div class="mstats">
+      <span class="pill">Ходы: <b id="moves">0</b></span>
+      <span class="pill">Лучший результат: <b id="mbest">—</b></span>
+      <button class="btn line" id="mrestart" style="padding:9px 16px;font-size:14px">Заново</button>
+    </div>
+    <div class="mwin" id="mwin"></div>
+  </section>
+
+  <footer>
+    <span>© 2026 meercat.ru</span>
+    <a href="index.html">На главную</a>
+    <a href="index.html#thanks">Угостить суриката</a>
+  </footer>
+</main>
+
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+  (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+  m[i].l=1*new Date();
+  for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+  k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+  (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+  ym(113958257, "init", {clickmap:true, trackLinks:true, accurateTrackBounce:true, webvisor:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/113958257" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+
+<script>
+/* ============ переключение вкладок ============ */
+document.querySelectorAll('.tab').forEach(function(t){
+  t.onclick = function(){
+    document.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('on', x === t); });
+    document.querySelectorAll('.panel').forEach(function(p){
+      p.classList.toggle('on', p.id === 'panel-' + t.dataset.panel);
+    });
+    if (t.dataset.panel === 'watch') requestAnimationFrame(resizeCanvas);
+  };
+});
+
+/* ============ игра 1: Часовой ============ */
+var cv = document.getElementById('sky');
+var ctx = cv.getContext('2d');
+var W = 320, H = 430, DPR = 1;
+
+function resizeCanvas(){
+  var r = cv.getBoundingClientRect();
+  if (!r.width) return;
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = r.width; H = r.height;
+  cv.width = Math.round(W * DPR);
+  cv.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+window.addEventListener('resize', function(){ resizeCanvas(); });
+resizeCanvas();
+
+var G = {
+  running: false, over: false,
+  duck: 0, score: 0, lives: 3,
+  hazards: [], t: 0, next: 1200, pops: [],
+  best: +(localStorage.getItem('mrk_watch_best') || 0)
+};
+document.getElementById('best').textContent = G.best;
+
+function ground(){ return H - 46; }
+function cx(){ return W / 2; }
+
+function spawn(){
+  var spread = Math.min(150, W * 0.34);
+  G.hazards.push({
+    x: cx() + (Math.random() * 2 - 1) * spread,
+    y: -30,
+    vy: Math.min(430, 165 + G.score * 4 + Math.random() * 35),
+    k: Math.random() < 0.5 ? 0 : 1
+  });
+}
+
+function drawMeerkat(x, gy, duck){
+  var s = 1.28, dy = 0;
+  if (duck) { s = 0.78; dy = 30; }
+  ctx.save();
+  ctx.translate(x, gy + dy);
+  // нора
+  ctx.fillStyle = 'rgba(120,92,54,.35)';
+  ctx.beginPath(); ctx.ellipse(0, 4, 30, 7, 0, 0, Math.PI * 2); ctx.fill();
+  // тело
+  ctx.fillStyle = '#c99b62';
+  ctx.beginPath(); ctx.ellipse(0, -26 * s, 15 * s, 28 * s, 0, 0, Math.PI * 2); ctx.fill();
+  // живот
+  ctx.fillStyle = '#f0dcc0';
+  ctx.beginPath(); ctx.ellipse(0, -22 * s, 8 * s, 19 * s, 0, 0, Math.PI * 2); ctx.fill();
+  // голова
+  ctx.fillStyle = '#c99b62';
+  ctx.beginPath(); ctx.arc(0, -58 * s, 12 * s, 0, Math.PI * 2); ctx.fill();
+  // ушки
+  ctx.beginPath(); ctx.arc(-10 * s, -66 * s, 4 * s, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(10 * s, -66 * s, 4 * s, 0, Math.PI * 2); ctx.fill();
+  // морда
+  ctx.fillStyle = '#f0dcc0';
+  ctx.beginPath(); ctx.ellipse(0, -54 * s, 7 * s, 6 * s, 0, 0, Math.PI * 2); ctx.fill();
+  // глаза
+  ctx.fillStyle = '#241c13';
+  ctx.beginPath(); ctx.arc(-4.5 * s, -60 * s, 1.9 * s, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(4.5 * s, -60 * s, 1.9 * s, 0, Math.PI * 2); ctx.fill();
+  // нос
+  ctx.beginPath(); ctx.arc(0, -55 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+function drawHazard(h){
+  ctx.save();
+  ctx.translate(h.x, h.y);
+  if (h.k === 0){
+    // птица-тень
+    ctx.fillStyle = 'rgba(36,28,19,.82)';
+    ctx.beginPath();
+    ctx.moveTo(-18, 0); ctx.quadraticCurveTo(-7, -10, 0, -2);
+    ctx.quadraticCurveTo(7, -10, 18, 0); ctx.quadraticCurveTo(7, -3, 0, 4);
+    ctx.quadraticCurveTo(-7, -3, -18, 0); ctx.fill();
+  } else {
+    // камень
+    ctx.fillStyle = 'rgba(120,92,54,.9)';
+    ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.25)';
+    ctx.beginPath(); ctx.arc(-3, -3, 3, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function hud(){
+  document.getElementById('score').textContent = G.score;
+  document.getElementById('lives').textContent = '●●●'.slice(0, Math.max(0, G.lives)) || '—';
+}
+
+function start(){
+  G.running = true; G.over = false; G.duck = 0;
+  G.score = 0; G.lives = 3; G.hazards = []; G.t = 0; G.next = 1200; G.pops = [];
+  document.getElementById('ov').classList.add('hide');
+  hud();
+}
+
+function gameOver(){
+  G.running = false; G.over = true;
+  if (G.score > G.best){
+    G.best = G.score;
+    localStorage.setItem('mrk_watch_best', String(G.best));
+    document.getElementById('best').textContent = G.best;
+  }
+  document.getElementById('ovTitle').textContent = 'Часовой устал';
+  document.getElementById('ovText').textContent = 'Очки: ' + G.score + '. Рекорд: ' + G.best + '. Ещё разок?';
+  document.getElementById('ovBtn').textContent = 'Ещё раз';
+  document.getElementById('ov').classList.remove('hide');
+}
+
+var last = 0;
+function loop(now){
+  var dt = Math.min(0.05, (last ? (now - last) : 16) / 1000);
+  last = now;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // земля и даль
+  ctx.fillStyle = '#e2cda6';
+  ctx.fillRect(0, ground() - 6, W, H - ground() + 6);
+  ctx.fillStyle = 'rgba(120,92,54,.18)';
+  ctx.fillRect(0, ground() - 6, W, 3);
+
+  if (G.running){
+    G.t += dt;
+    G.next -= dt * 1000;
+    if (G.next <= 0){
+      spawn();
+      G.next = Math.max(380, 900 - G.score * 12);
+    }
+
+    for (var i = G.hazards.length - 1; i >= 0; i--){
+      var h = G.hazards[i];
+      h.y += h.vy * dt;
+      if (h.y >= ground() - 24){
+        // момент истины
+        if (G.duck > 0){ G.score++; G.pops.push({x: h.x, y: ground() - 30, t: 0.9}); }
+        else {
+          G.lives--;
+          if (G.lives <= 0){ G.hazards.splice(i, 1); gameOver(); hud(); break; }
+        }
+        G.hazards.splice(i, 1);
+        hud();
+        continue;
+      }
+    }
+  }
+
+  G.hazards.forEach(drawHazard);
+
+  // «+1» за уклонение
+  for (var j = G.pops.length - 1; j >= 0; j--){
+    var pop = G.pops[j];
+    pop.t -= dt; pop.y -= 26 * dt;
+    if (pop.t <= 0){ G.pops.splice(j, 1); continue; }
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, pop.t));
+    ctx.fillStyle = '#7a8b3a';
+    ctx.font = '700 16px -apple-system,Segoe UI,Roboto,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('+1', pop.x, pop.y);
+    ctx.restore();
+  }
+
+  drawMeerkat(cx(), ground(), G.duck > 0);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+function press(){ if (G.running) G.duck = 0.3; }
+function release(){ G.duck = 0; }
+
+cv.addEventListener('pointerdown', function(e){ e.preventDefault(); press(); });
+cv.addEventListener('pointerup', release);
+cv.addEventListener('pointercancel', release);
+cv.addEventListener('pointerleave', release);
+window.addEventListener('keydown', function(e){
+  if (e.code === 'Space' || e.code === 'ArrowDown'){ e.preventDefault(); press(); }
+});
+window.addEventListener('keyup', function(e){
+  if (e.code === 'Space' || e.code === 'ArrowDown') release();
+});
+document.getElementById('ovBtn').onclick = start;
+
+// «пригнуться» на 0.22 с, даже если палец сразу отпустили
+setInterval(function(){ if (G.duck > 0) G.duck = Math.max(0, G.duck - 0.05); }, 50);
+
+/* ============ игра 2: Пары ============ */
+var PHOTOS = [1,2,3,4,5,6,7,8].map(function(i){ return 'img/meerkats/m' + i + '.webp'; });
+var grid = document.getElementById('grid');
+var first = null, lock = false, moves = 0, matched = 0;
+var MBEST_KEY = 'mrk_pairs_best';
+
+function mbest(v){
+  var cur = localStorage.getItem(MBEST_KEY);
+  if (v == null) return cur;
+  if (!cur || v < +cur){ localStorage.setItem(MBEST_KEY, String(v)); return String(v); }
+  return cur;
+}
+document.getElementById('mbest').textContent = mbest() ? mbest() + ' ходов' : '—';
+
+function shuffle(a){
+  for (var i = a.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function newGame(){
+  grid.innerHTML = '';
+  first = null; lock = false; moves = 0; matched = 0;
+  document.getElementById('moves').textContent = '0';
+  document.getElementById('mwin').classList.remove('on');
+
+  var deck = shuffle(PHOTOS.concat(PHOTOS));
+  deck.forEach(function(src){
+    var b = document.createElement('button');
+    b.className = 'mcard';
+    b.setAttribute('aria-label', 'карточка');
+    b.innerHTML = '<span class="inner">' +
+        '<span class="side back"><img src="img/meerkat.webp" alt=""></span>' +
+        '<span class="side front"><img src="' + src + '" alt="" loading="lazy"></span>' +
+      '</span>';
+    b.dataset.src = src;
+    b.onclick = function(){ flip(b); };
+    grid.appendChild(b);
+  });
+}
+
+function flip(card){
+  if (lock || card.classList.contains('flip') || card.classList.contains('done')) return;
+  card.classList.add('flip');
+  if (!first){ first = card; return; }
+
+  moves++;
+  document.getElementById('moves').textContent = moves;
+
+  if (first.dataset.src === card.dataset.src){
+    first.classList.add('done'); card.classList.add('done');
+    first = null; matched += 2;
+    if (matched === 16){
+      var best = mbest(moves);
+      var win = document.getElementById('mwin');
+      win.textContent = 'Все пары найдены за ' + moves + ' ходов. Лучший результат: ' + best + '.';
+      win.classList.add('on');
+      document.getElementById('mbest').textContent = best + ' ходов';
+    }
+    return;
+  }
+
+  var a = first; first = null; lock = true;
+  setTimeout(function(){
+    a.classList.remove('flip'); card.classList.remove('flip');
+    lock = false;
+  }, 750);
+}
+
+document.getElementById('mrestart').onclick = newGame;
+newGame();
+</script>
+</body>
+</html>
