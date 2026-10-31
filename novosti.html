@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Новости — meercat.ru</title>
+<meta name="description" content="Новости норы: что нового на сайте и в играх. Обновляется каждый день.">
+<meta name="theme-color" content="#f7f1e6">
+<link rel="icon" href="img/favicon.png">
+<style>
+  :root{
+    --sand:#f7f1e6; --ink:#241c13; --ink2:#5b4c3a; --dim:#8a7761;
+    --line:rgba(90,70,40,.16); --accent:#d98324; --accent2:#b8541f; --card:#fffdf8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;background:var(--sand);color:var(--ink);font-size:17px;line-height:1.6;
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background-image:
+      radial-gradient(800px 500px at 85% -10%, rgba(217,131,36,.13), transparent 62%),
+      radial-gradient(700px 460px at -10% 10%, rgba(122,139,58,.10), transparent 60%);
+    background-attachment:fixed;
+  }
+  a{color:inherit}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px}
+  header{position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);
+    background:rgba(247,241,230,.9);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:12px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;text-decoration:none}
+  .brand img{width:36px;height:36px;border-radius:50%;box-shadow:0 4px 12px rgba(90,70,40,.22)}
+  .brand b{color:var(--accent2)}
+  .nav .back{margin-left:auto;font-size:14.5px;font-weight:700;text-decoration:none;
+    border:1px solid var(--line);background:var(--card);padding:9px 14px;border-radius:999px}
+
+  main{padding:34px 0 60px}
+  h1{font-size:34px;line-height:1.12;letter-spacing:-.6px;margin-bottom:6px}
+  h1 span{color:var(--accent2)}
+  .lead{color:var(--ink2);margin-bottom:22px}
+
+  .fact{background:linear-gradient(135deg,#fff6e0,#ffe9c2);border:1px solid rgba(217,131,36,.28);
+    border-radius:20px;padding:16px 18px;margin-bottom:22px;box-shadow:0 14px 34px rgba(90,70,40,.10)}
+  .fact .tag{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;
+    color:#8a4b10;background:rgba(217,131,36,.18);border-radius:999px;padding:3px 10px;margin-bottom:8px}
+  .fact p{font-size:16.5px;color:#4a3320}
+  .fact .d{font-size:12.5px;color:#a5804e;margin-top:8px;font-weight:700}
+
+  .list{display:flex;flex-direction:column;gap:12px}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px 17px;
+    box-shadow:0 10px 26px rgba(90,70,40,.08);display:flex;gap:14px;align-items:flex-start}
+  .item .date{flex:none;width:62px;text-align:center}
+  .item .date b{display:block;font-size:19px;line-height:1;color:var(--accent2)}
+  .item .date span{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);font-weight:800}
+  .item .body{flex:1;min-width:0}
+  .item h3{font-size:17px;margin-bottom:3px}
+  .item p{font-size:14.5px;color:var(--ink2)}
+  .chip{display:inline-block;font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
+    border-radius:999px;padding:2px 9px;margin-bottom:6px}
+  .chip.игра{background:rgba(47,156,147,.14);color:#2f7a72}
+  .chip.сайт{background:rgba(217,131,36,.16);color:#8a4b10}
+  .chip.факт{background:rgba(122,139,58,.16);color:#4f5f22}
+  .empty{color:var(--dim);text-align:center;padding:24px 0}
+  footer{margin-top:30px;color:var(--dim);font-size:13.5px;text-align:center}
+  @media (max-width:520px){
+    h1{font-size:27px}
+    .item{flex-direction:row;gap:10px;padding:13px}
+    .item .date{width:50px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html">
+      <img src="img/meerkat.webp" alt="сурикат">
+      <span>meercat<b>.ru</b></span>
+    </a>
+    <a class="back" href="index.html">← На главную</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1>Новости <span>норы</span></h1>
+  <p class="lead">Что нового на сайте и в играх. Факт дня меняется сам, каждый день.</p>
+
+  <div class="fact" id="factBox">
+    <span class="tag">Факт дня</span>
+    <p id="factText">Загрузка…</p>
+    <div class="d" id="factDate"></div>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <footer>
+    © 2026 meercat.ru · <a href="igra.html">игры</a> · <a href="index.html#thanks">угостить суриката</a>
+  </footer>
+</main>
+
+<script>
+/* факты: один на день, по номеру дня в году */
+var FACTS = [
+  'Сурикаты живут колониями до 30 зверей и всегда ставят кого-то «наверх» — сторожить небо.',
+  'У суриката тёмные круги вокруг глаз — не от недосыпа, а чтобы солнце не слепило.',
+  'Сурикаты умеют стоять на задних лапах часами: так они видят хищника за сотни метров.',
+  'Сурикат съедает за день примерно столько же, сколько весит сам.',
+  'У сурикатов есть «дежурные няньки»: пока все копают, кто-то сидит с детёнышами.',
+  'Сурикаты различают друг друга по голосу и зовут своих по имени-звуку.',
+  'Ядовитые насекомые для суриката — обычная еда: он умеет их обезвредить.',
+  'Сурикаты не боятся скорпионов: у них есть устойчивость к яду.',
+  'Нора суриката — это лабиринт с десятками входов и отдельными «спальнями».',
+  'Перед выходом из норы сурикат сначала высовывает голову и осматривается.',
+  'Сурикаты узнают тень хищной птицы быстрее, чем её саму.',
+  'Детёныши сурикатов рождаются слепыми и беспомощными, но через месяц уже копают.',
+  'Сурикат может не пить воду неделями: всю влагу он берёт из еды.',
+  'Колония сурикатов выставляет «смену караула» каждые несколько часов.',
+  'Сурикаты любят греться на солнце, вытянувшись столбиком.',
+  'Если сурикат заметил опасность, он издаёт короткий лай — и вся колония прячется.',
+  'Сурикаты чистят друг другу шерсть — это не гигиена, а дружба.',
+  'У сурикатов сильный иммунитет к яду скорпионов, змей и пауков.',
+  'Сурикат бежит со скоростью до 30 км/ч, но только короткими перебежками.',
+  'Сурикаты роют норы так, чтобы вход был выше выхода — так внутрь не затекает вода.',
+  'Молодые сурикаты учатся охоте, играя с жуками и ящерицами.',
+  'Сурикат — не сурок и не мангуст, хотя все их путают.',
+  'В колонии сурикатов есть «главная самка» — она решает, когда переезжать.',
+  'Сурикаты спят, свернувшись клубком, по 10–12 зверей в одной норе.',
+  'Сурикат узнаёт себя в зеркале — редкость среди мелких хищников.',
+  'Чёрные кончики ушей суриката — не украшение, а способ показать настроение.',
+  'Сурикаты приносят детёнышам «учебных» насекомых: сначала мёртвых, потом живых.',
+  'Хвост суриката служит балансиром, когда он стоит на задних лапах.',
+  'Сурикаты не любят дождь: мокрая шерсть плохо держит тепло, а копать неудобно.',
+  'Если нора занята чужими, сурикаты просто выкапывают новую рядом.'
+];
+
+/* локальные новости, если news.json ещё нет рядом */
+var FALLBACK = [
+  { date:'2026-10-31', tag:'игра', title:'Нора суриката теперь в 3D',
+    text:'Сурикат-маг с посохом держит нору в объёмной пустыне: 200 волн, боссы и шесть школ магии.' },
+  { date:'2026-10-30', tag:'игра', title:'Клад суриката: автомат на девять линий',
+    text:'Пять барабанов, девять линий и призовые норки.' }
+];
+
+function dayIndex(){
+  var now = new Date();
+  var start = new Date(now.getFullYear(), 0, 0);
+  return Math.floor((now - start) / 86400000);
+}
+function fmt(d){
+  var p = d.split('-');
+  var months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  return +p[2] + ' ' + months[(+p[1]) - 1] + ' ' + p[0];
+}
+
+/* факт дня */
+(function factOfDay(){
+  var idx = dayIndex() % FACTS.length;
+  var today = new Date().toISOString().slice(0, 10);
+  document.getElementById('factText').textContent = FACTS[idx];
+  document.getElementById('factDate').textContent = fmt(today);
+})();
+
+function render(items){
+  var host = document.getElementById('list');
+  if (!items || !items.length){
+    host.innerHTML = '<div class="empty">Новостей пока нет — сурикат копает.</div>';
+    return;
+  }
+  items.sort(function(a, b){ return a.date < b.date ? 1 : -1; });
+  host.innerHTML = items.map(function(it){
+    var p = it.date.split('-');
+    var months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+    return '<article class="item">' +
+      '<div class="date"><b>' + (+p[2]) + '</b><span>' + months[(+p[1]) - 1] + '</span></div>' +
+      '<div class="body">' +
+        '<span class="chip ' + (it.tag || 'сайт') + '">' + (it.tag || 'сайт') + '</span>' +
+        '<h3>' + it.title + '</h3>' +
+        '<p>' + it.text + '</p>' +
+      '</div></article>';
+  }).join('');
+}
+
+fetch('news.json?t=' + Date.now(), { cache: 'no-store' })
+  .then(function(r){ if (!r.ok) throw new Error('no file'); return r.json(); })
+  .then(function(data){ render(data); })
+  .catch(function(){ render(FALLBACK); });
+</script>
+
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+  (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+  m[i].l=1*new Date();
+  for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+  k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+  (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+  ym(113958257, "init", {clickmap:true, trackLinks:true, accurateTrackBounce:true, webvisor:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/113958257" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+
+</body>
+</html>

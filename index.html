@@ -167,8 +167,15 @@
 
 <style>
   .pill.play{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:800}
+  .pill.news{background:#fffdf8;color:#b8541f;border-color:rgba(184,84,31,.35);font-weight:800;display:none}
+  .pill .short{display:none}
+  @media(max-width:520px){
+    .pill .full{display:none}
+    .pill .short{display:inline}
+    .pill.play,.pill.news{padding:8px 11px;font-size:13px}
+  }
   .pill.play{display:inline-flex;align-items:center}
-  @media(max-width:520px){ .pill:not(.play){display:none} .pill.play{display:inline-flex} }
+  @media(max-width:520px){ .pill:not(.play):not(.news){display:none} .pill.play,.pill.news{display:inline-flex} }
 </style>
 </head>
 <body>
@@ -183,9 +190,11 @@
       <a href="#facts">Факты</a>
       <a href="#photos">Фотографии</a>
       <a href="#about">Что это</a>
+      <a href="novosti.html">Новости</a>
       <a href="igra.html">Игры сурикатов</a>
     </nav>
-    <a class="pill play" href="igra.html">Игры сурикатов</a>
+    <a class="pill play" href="igra.html"><span class="full">Игры сурикатов</span><span class="short">Игры</span></a>
+    <a class="pill news" href="novosti.html">Новости</a>
     <a class="pill" href="#photos">Смотреть сурикатов</a>
   </div>
 </header>
