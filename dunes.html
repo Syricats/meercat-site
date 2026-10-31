@@ -144,6 +144,11 @@ dir.shadow.camera.top = sc; dir.shadow.camera.bottom = -sc;
 dir.shadow.bias = -0.0006;
 scene.add(dir);
 
+// мягкий заполняющий свет со стороны камеры, чтобы сурикат не был силуэтом
+const fill = new THREE.DirectionalLight(0xffe0c0, 0.55);
+fill.position.set(6, 8, 18);
+scene.add(fill);
+
 /* ---------- песок: полоса с дюнами ---------- */
 const GROUND_W = 120, GROUND_L = 420, SEG_W = 60, SEG_L = 160;
 const groundGeo = new THREE.PlaneGeometry(GROUND_W, GROUND_L, SEG_W, SEG_L);
@@ -270,6 +275,7 @@ function makeMeerkat(){
 const meerkat = makeMeerkat();
 meerkat.scale.setScalar(0.98);
 meerkat.position.set(0, 0, 4);
+meerkat.rotation.y = Math.PI;
 scene.add(meerkat);
 
 /* ---------- камни, кактусы, жуки ---------- */
@@ -429,7 +435,7 @@ function animate(now){
     meerkat.position.x = S.x;
     meerkat.position.y = S.y;
     meerkat.rotation.z = S.tilt;
-    meerkat.rotation.y = S.x * -0.05;
+    meerkat.rotation.y = Math.PI + S.x * -0.05;   // бежит «от камеры»
     meerkat.rotation.x = S.y > 0.05 ? -0.16 : 0;
 
     // бег: лапы
