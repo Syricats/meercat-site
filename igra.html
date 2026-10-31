@@ -59,6 +59,11 @@
     .art{width:96px;height:96px}
     h1{font-size:27px}
   }
+
+  .subnav{margin-left:auto;display:flex;gap:8px}
+  .subnav a{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 14px;
+    font-weight:700;font-size:13.5px;text-decoration:none;color:var(--ink)}
+  .subnav a.on{background:var(--accent2);border-color:var(--accent2);color:#fff8ec}
 </style>
 </head>
 <body>
@@ -69,7 +74,7 @@
       <img src="img/meerkat.webp" alt="сурикат">
       <span>meercat<b>.ru</b></span>
     </a>
-    <a class="back" href="index.html">← На главную</a>
+    <nav class="subnav"><a href="igra.html" class="on">Игры</a><a href="novosti.html">Новости</a></nav>
   </div>
 </header>
 

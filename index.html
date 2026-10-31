@@ -141,6 +141,13 @@
   #mrk-flyer.dim{opacity:.12; transition:opacity .25s ease}
   @media (max-width:640px){ #mrk-flyer{width:120px} }
   @media (prefers-reduced-motion:reduce){ #mrk-flyer{display:none} }
+
+  .navlinks.mainnav{display:flex;gap:8px;margin-left:auto;font-size:14.5px}
+  .navlinks.mainnav a{border:1px solid var(--line);background:var(--card);border-radius:12px;
+    padding:9px 16px;font-weight:700;text-decoration:none;color:var(--ink)}
+  .navlinks.mainnav a:hover{color:var(--accent2);border-color:rgba(184,84,31,.35)}
+  @media(max-width:760px){ .navlinks.mainnav{display:flex} }
+  @media(max-width:520px){ .navlinks.mainnav a{padding:8px 12px;font-size:13px} }
 </style>
 
 <!-- Yandex.Metrika counter -->
@@ -186,16 +193,10 @@
       <img src="img/meerkat.webp" alt="сурикат">
       <span>meercat<b>.ru</b></span>
     </a>
-    <nav class="navlinks">
-      <a href="#facts">Факты</a>
-      <a href="#photos">Фотографии</a>
-      <a href="#about">Что это</a>
+    <nav class="navlinks mainnav">
+      <a href="igra.html">Игры</a>
       <a href="novosti.html">Новости</a>
-      <a href="igra.html">Игры сурикатов</a>
     </nav>
-    <a class="pill play" href="igra.html"><span class="full">Игры сурикатов</span><span class="short">Игры</span></a>
-    <a class="pill news" href="novosti.html">Новости</a>
-    <a class="pill" href="#photos">Смотреть сурикатов</a>
   </div>
 </header>
 
