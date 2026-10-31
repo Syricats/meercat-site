@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Дюны — 3D-игра про суриката</title>
+<meta name="description" content="Трёхмерный бег по дюнам: сурикат, закат, камни и жуки.">
+<meta name="theme-color" content="#241c13">
+<link rel="icon" href="img/favicon.png">
+<style>
+  :root{ --sand:#f7f1e6; --ink:#241c13; --card:#fffdf8; --line:rgba(90,70,40,.16); --accent:#d98324; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#1b1420;color:var(--sand);font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow:hidden}
+  #app{position:fixed;inset:0}
+  canvas{display:block;width:100%;height:100%;touch-action:none}
+  .top{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;gap:10px;padding:14px 16px;
+    z-index:5;pointer-events:none}
+  .top a{pointer-events:auto;text-decoration:none;color:#f7f1e6;background:rgba(20,14,24,.55);
+    border:1px solid rgba(255,255,255,.18);padding:9px 14px;border-radius:999px;font-size:14px;font-weight:700;
+    backdrop-filter:blur(8px)}
+  .hud{margin-left:auto;display:flex;gap:8px;font-size:14px;font-weight:800}
+  .hud span{background:rgba(20,14,24,.55);border:1px solid rgba(255,255,255,.18);border-radius:999px;
+    padding:7px 13px;backdrop-filter:blur(8px)}
+  .overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;text-align:center;padding:26px;background:rgba(18,12,20,.62);backdrop-filter:blur(3px);z-index:10}
+  .overlay.hide{display:none}
+  .overlay h1{font-size:30px;letter-spacing:-.5px}
+  .overlay h1 span{color:#ffb05c}
+  .overlay p{max-width:360px;font-size:15.5px;line-height:1.55;opacity:.92}
+  .btn{border:0;border-radius:16px;padding:15px 30px;font-size:17px;font-weight:800;cursor:pointer;
+    background:linear-gradient(135deg,#ffb05c,#e2681f);color:#2a1a10;box-shadow:0 12px 30px rgba(226,104,31,.4)}
+  .btn:active{transform:translateY(1px)}
+  .keys{font-size:13px;opacity:.7}
+  .speedbar{position:fixed;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.08);z-index:5}
+  .speedbar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#ffb05c,#e2681f)}
+  .vignette{position:fixed;inset:0;pointer-events:none;z-index:4;
+    background:radial-gradient(120% 90% at 50% 45%, transparent 45%, rgba(30,12,20,.55) 100%)}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div class="vignette"></div>
+
+<div class="top">
+  <a href="igra.html">← Игры</a>
+  <div class="hud">
+    <span>Метры: <b id="m">0</b></span>
+    <span>Жуки: <b id="b">0</b></span>
+  </div>
+</div>
+
+<div class="overlay" id="ov">
+  <h1>Дюны <span>3D</span></h1>
+  <p>Сурикат бежит по закатной пустыне. Свайп влево-вправо — сменить полосу, свайп вверх или тап — прыжок.
+  Собирай жуков, уходи от камней и кактусов.</p>
+  <button class="btn" id="start">Бежать</button>
+  <p class="keys">Клавиатура: ← → и пробел</p>
+</div>
+
+<div class="speedbar"><i id="spd"></i></div>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const app = document.getElementById('app');
+const ov = document.getElementById('ov');
+const elM = document.getElementById('m');
+const elB = document.getElementById('b');
+const elSpd = document.getElementById('spd');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xf6a868, 55, 165);
+
+const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 400);
+camera.position.set(0, 7.4, 14.5);
+camera.lookAt(0, 2.4, -16);
+
+/* ---------- небо: градиентный купол ---------- */
+function skyTexture(){
+  const c = document.createElement('canvas');
+  c.width = 16; c.height = 256;
+  const g = c.getContext('2d').createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0.00, '#150e24');
+  g.addColorStop(0.35, '#4a2a5c');
+  g.addColorStop(0.60, '#b34f63');
+  g.addColorStop(0.78, '#ef7a4a');
+  g.addColorStop(0.92, '#ffb265');
+  g.addColorStop(1.00, '#ffd9a0');
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 16, 256);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const sky = new THREE.Mesh(
+  new THREE.SphereGeometry(220, 32, 24),
+  new THREE.MeshBasicMaterial({ map: skyTexture(), side: THREE.BackSide, depthWrite: false, fog: false })
+);
+scene.add(sky);
+
+/* солнце */
+function sunTexture(){
+  const s = 256, c = document.createElement('canvas');
+  c.width = c.height = s;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s/2);
+  g.addColorStop(0, 'rgba(255,246,214,1)');
+  g.addColorStop(0.25, 'rgba(255,214,140,.95)');
+  g.addColorStop(0.55, 'rgba(255,150,70,.35)');
+  g.addColorStop(1, 'rgba(255,120,40,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, s, s);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const sun = new THREE.Sprite(new THREE.SpriteMaterial({ map: sunTexture(), transparent: true, depthWrite: false, fog: false }));
+sun.scale.set(72, 72, 1);
+sun.position.set(-30, 26, -150);
+scene.add(sun);
+
+/* ---------- свет ---------- */
+const hemi = new THREE.HemisphereLight(0xffcfa0, 0x5a3423, 0.62);
+scene.add(hemi);
+
+const dir = new THREE.DirectionalLight(0xffd0a0, 2.6);
+dir.position.set(-24, 26, -30);
+dir.castShadow = true;
+dir.shadow.mapSize.set(1024, 1024);
+dir.shadow.camera.near = 1;
+dir.shadow.camera.far = 120;
+const sc = 42;
+dir.shadow.camera.left = -sc; dir.shadow.camera.right = sc;
+dir.shadow.camera.top = sc; dir.shadow.camera.bottom = -sc;
+dir.shadow.bias = -0.0006;
+scene.add(dir);
+
+/* ---------- песок: полоса с дюнами ---------- */
+const GROUND_W = 120, GROUND_L = 420, SEG_W = 60, SEG_L = 160;
+const groundGeo = new THREE.PlaneGeometry(GROUND_W, GROUND_L, SEG_W, SEG_L);
+groundGeo.rotateX(-Math.PI / 2);
+
+function duneHeights(){
+  const pos = groundGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++){
+    const x = pos.getX(i), z = pos.getZ(i);
+    const far = Math.max(0, (-z - 6) / 40);
+    const h =
+      Math.sin(x * 0.09 + z * 0.05) * 1.9 +
+      Math.sin(x * 0.035 - z * 0.03) * 3.6 +
+      Math.cos(z * 0.07) * 1.8 +
+      Math.sin((x + z) * 0.15) * 0.7;
+    pos.setY(i, (h + 1.2) * Math.min(1.6, far));
+  }
+  groundGeo.computeVertexNormals();
+}
+duneHeights();
+
+const sandMat = new THREE.MeshStandardMaterial({ color: 0xe3b27a, roughness: 1, metalness: 0 });
+const ground = new THREE.Mesh(groundGeo, sandMat);
+ground.receiveShadow = true;
+ground.position.z = -160;
+scene.add(ground);
+
+/* дальние сопки */
+const hillMat = new THREE.MeshBasicMaterial({ color: 0x8a4a52, fog: false });
+for (let i = 0; i < 7; i++){
+  const h = new THREE.Mesh(new THREE.ConeGeometry(26 + Math.random() * 18, 12 + Math.random() * 14, 4), hillMat);
+  h.position.set(-90 + i * 30, -2, -190 - Math.random() * 30);
+  h.rotation.y = Math.random() * Math.PI;
+  scene.add(h);
+}
+
+/* полосы на песке — чтобы читалась скорость */
+const stripeTex = (() => {
+  const c = document.createElement('canvas'); c.width = 8; c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = 'rgba(0,0,0,0)'; ctx.fillRect(0, 0, 8, 128);
+  ctx.fillStyle = 'rgba(140,90,45,.10)';
+  ctx.fillRect(0, 0, 8, 26);
+  ctx.fillStyle = 'rgba(255,240,210,.08)';
+  ctx.fillRect(0, 64, 8, 20);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(6, 26);
+  return t;
+})();
+// пунктирные линии между полосами
+const dashMat = new THREE.MeshBasicMaterial({ color: 0xfff1da, transparent: true, opacity: .22, depthWrite: false });
+for (const x of [-1.6, 1.6]){
+  for (let z = 6; z > -180; z -= 8){
+    const d = new THREE.Mesh(new THREE.PlaneGeometry(0.09, 3.2), dashMat);
+    d.rotation.x = -Math.PI / 2;
+    d.position.set(x, 0.05, z);
+    scene.add(d);
+  }
+}
+
+/* ---------- сурикат ---------- */
+const SKIN = 0xc99b62, BELLY = 0xf2dfc2, DARK = 0x2a1f16;
+function makeMeerkat(){
+  const g = new THREE.Group();
+
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.44, 1.15, 6, 12), new THREE.MeshStandardMaterial({ color: SKIN, roughness: .85 }));
+  body.position.y = 1.95; body.castShadow = true;
+  g.add(body);
+
+  const belly = new THREE.Mesh(new THREE.CapsuleGeometry(0.27, 0.9, 6, 10), new THREE.MeshStandardMaterial({ color: BELLY, roughness: .9 }));
+  belly.position.set(0, 1.9, 0.2);
+  g.add(belly);
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.42, 18, 14), new THREE.MeshStandardMaterial({ color: SKIN, roughness: .8 }));
+  head.position.set(0, 2.82, 0.08); head.castShadow = true;
+  g.add(head);
+
+  const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 12), new THREE.MeshStandardMaterial({ color: BELLY, roughness: .9 }));
+  muzzle.position.set(0, 2.74, 0.38); muzzle.scale.set(1, .8, 1);
+  g.add(muzzle);
+
+  [-1, 1].forEach(s => {
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), new THREE.MeshStandardMaterial({ color: SKIN }));
+    ear.position.set(0.28 * s, 3.14, 0.02);
+    g.add(ear);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.085, 10, 8), new THREE.MeshStandardMaterial({ color: DARK }));
+    eye.position.set(0.16 * s, 2.9, 0.36);
+    g.add(eye);
+  });
+
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), new THREE.MeshStandardMaterial({ color: 0x3a2a20 }));
+  nose.position.set(0, 2.68, 0.56);
+  g.add(nose);
+
+  // хвост
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.16, 1.5, 8), new THREE.MeshStandardMaterial({ color: SKIN }));
+  tail.position.set(0, 1.25, -0.5); tail.rotation.x = 0.9;
+  g.add(tail);
+
+  // лапы
+  const legs = [];
+  [-0.21, 0.21].forEach(x => {
+    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.11, 0.62, 4, 8), new THREE.MeshStandardMaterial({ color: SKIN }));
+    leg.position.set(x, 0.58, 0.02);
+    leg.castShadow = true;
+    g.add(leg); legs.push(leg);
+  });
+
+  const arms = [];
+  [-0.34, 0.34].forEach(x => {
+    const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.085, 0.42, 4, 8), new THREE.MeshStandardMaterial({ color: SKIN }));
+    arm.position.set(x, 1.95, 0.16);
+    arm.rotation.x = -0.55; arm.rotation.z = x > 0 ? -0.2 : 0.2;
+    g.add(arm); arms.push(arm);
+  });
+
+  g.userData.arms = arms;
+  g.userData.legs = legs;
+  g.userData.body = body;
+  g.userData.head = head;
+  return g;
+}
+const meerkat = makeMeerkat();
+meerkat.scale.setScalar(0.98);
+meerkat.position.set(0, 0, 4);
+scene.add(meerkat);
+
+/* ---------- камни, кактусы, жуки ---------- */
+const pool = { rocks: [], cacti: [], beetles: [] };
+const rockGeo = new THREE.IcosahedronGeometry(1, 0);
+const rockMat = new THREE.MeshStandardMaterial({ color: 0x8a7a66, roughness: 1, flatShading: true });
+const cactusMat = new THREE.MeshStandardMaterial({ color: 0x4f6b3d, roughness: .95 });
+
+function makeRock(){
+  const m = new THREE.Mesh(rockGeo, rockMat);
+  const s = 0.7 + Math.random() * 0.8;
+  m.scale.set(s, s * (0.8 + Math.random() * 0.5), s);
+  m.rotation.set(Math.random(), Math.random(), Math.random());
+  m.castShadow = true;
+  return m;
+}
+function makeCactus(){
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.3, 2.4, 8), cactusMat);
+  trunk.position.y = 1.2; trunk.castShadow = true;
+  g.add(trunk);
+  const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.9, 8), cactusMat);
+  arm.position.set(0.42, 1.5, 0); arm.rotation.z = -0.5;
+  g.add(arm);
+  return g;
+}
+function makeBeetle(){
+  const g = new THREE.Group();
+  const b = new THREE.Mesh(new THREE.SphereGeometry(0.26, 12, 10),
+    new THREE.MeshStandardMaterial({ color: 0xff9f43, emissive: 0xff7a18, emissiveIntensity: 1.4, roughness: .5 }));
+  b.scale.set(1, 0.7, 1.25);
+  g.add(b);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: sunTexture(), color: 0xffb066, transparent: true, opacity: .55, depthWrite: false }));
+  glow.scale.set(1.15, 1.15, 1);
+  g.add(glow);
+  return g;
+}
+
+const LANES = [-3.2, 0, 3.2];
+const SPAWN_Z = -95;
+const objects = [];
+
+function resetWorld(){
+  objects.forEach(o => scene.remove(o.mesh));
+  objects.length = 0;
+  for (let i = 0; i < 14; i++) spawnObject(-12 - i * 7);
+}
+
+function spawnObject(z){
+  const lane = LANES[Math.floor(Math.random() * LANES.length)];
+  const kind = Math.random() < 0.22 ? 'beetle' : (Math.random() < 0.45 ? 'cactus' : 'rock');
+  let mesh;
+  if (kind === 'rock') mesh = makeRock();
+  else if (kind === 'cactus') mesh = makeCactus();
+  else mesh = makeBeetle();
+  mesh.position.set(lane + (Math.random() * 1.2 - 0.6), kind === 'beetle' ? 1.1 : 0, z);
+  if (kind === 'cactus') mesh.scale.setScalar(1.5);
+  if (kind === 'rock') mesh.scale.multiplyScalar(1.15);
+  scene.add(mesh);
+  objects.push({ mesh, kind, lane, taken: false });
+}
+
+/* пыль из-под лап */
+const dustN = 90;
+const dustPos = new Float32Array(dustN * 3);
+for (let i = 0; i < dustN; i++){
+  dustPos[i*3]   = (Math.random() - 0.5) * 8;
+  dustPos[i*3+1] = Math.random() * 1.6;
+  dustPos[i*3+2] = 4 + Math.random() * 10;
+}
+const dustGeo = new THREE.BufferGeometry();
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({
+  color: 0xffd9a8, size: 0.13, transparent: true, opacity: .5, depthWrite: false
+}));
+scene.add(dust);
+
+/* ---------- состояние игры ---------- */
+const S = {
+  running: false, dead: false,
+  lane: 1, x: 0, y: 0, vy: 0,
+  speed: 16, dist: 0, beetles: 0, best: +(localStorage.getItem('mrk_dunes_best') || 0),
+  tilt: 0, hint: 0
+};
+
+function start(){
+  S.running = true; S.dead = false; S.lane = 1; S.x = 0; S.y = 0; S.vy = 0;
+  S.speed = 16; S.dist = 0; S.beetles = 0;
+  meerkat.position.set(0, 0, 4);
+  resetWorld();
+  ov.classList.add('hide');
+  elM.textContent = '0'; elB.textContent = '0';
+}
+
+function gameOver(){
+  S.running = false; S.dead = true;
+  if (S.dist > S.best){ S.best = Math.floor(S.dist); localStorage.setItem('mrk_dunes_best', String(S.best)); }
+  ov.querySelector('h1').innerHTML = 'Дюны <span>3D</span>';
+  ov.querySelector('p').innerHTML = 'Пробежал <b>' + Math.floor(S.dist) + ' м</b>, собрал <b>' + S.beetles +
+    '</b> жуков.<br>Рекорд: ' + S.best + ' м.';
+  document.getElementById('start').textContent = 'Ещё раз';
+  ov.classList.remove('hide');
+}
+
+/* ---------- управление ---------- */
+let touchStart = null;
+function moveLane(d){
+  if (!S.running) return;
+  const next = Math.min(2, Math.max(0, S.lane + d));
+  if (next !== S.lane){ S.lane = next; S.tilt = -d * 0.35; }
+}
+function jump(){
+  if (!S.running) return;
+  if (S.y <= 0.001){ S.vy = 9.2; }
+}
+window.addEventListener('keydown', e => {
+  if (e.code === 'ArrowLeft') moveLane(-1);
+  if (e.code === 'ArrowRight') moveLane(1);
+  if (e.code === 'Space' || e.code === 'ArrowUp'){ e.preventDefault(); jump(); }
+});
+const cvEl = renderer.domElement;
+cvEl.addEventListener('pointerdown', e => { touchStart = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+cvEl.addEventListener('pointerup', e => {
+  if (!touchStart) return;
+  const dx = e.clientX - touchStart.x, dy = e.clientY - touchStart.y;
+  const dt = performance.now() - touchStart.t;
+  if (Math.abs(dx) > 32 && Math.abs(dx) > Math.abs(dy)) moveLane(dx > 0 ? 1 : -1);
+  else if (dy < -32) jump();
+  else if (dt < 260) jump();
+  touchStart = null;
+});
+
+/* ---------- цикл ---------- */
+let last = performance.now();
+let camShake = 0;
+
+function animate(now){
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+
+  if (S.running){
+    S.speed = Math.min(46, S.speed + dt * 0.55);
+    S.dist += S.speed * dt;
+    elM.textContent = String(Math.floor(S.dist));
+    elSpd.style.width = Math.min(100, (S.speed / 46) * 100) + '%';
+
+    // плавный переход между полосами
+    const targetX = LANES[S.lane];
+    S.x += (targetX - S.x) * Math.min(1, dt * 12);
+    S.tilt += (0 - S.tilt) * Math.min(1, dt * 8);
+
+    // прыжок
+    S.vy -= 26 * dt;
+    S.y = Math.max(0, S.y + S.vy * dt);
+    if (S.y <= 0) S.vy = 0;
+
+    meerkat.position.x = S.x;
+    meerkat.position.y = S.y;
+    meerkat.rotation.z = S.tilt;
+    meerkat.rotation.y = S.x * -0.05;
+    meerkat.rotation.x = S.y > 0.05 ? -0.16 : 0;
+
+    // бег: лапы
+    const swing = Math.sin(now / 90) * (S.y > 0 ? 0.2 : 0.85);
+    meerkat.userData.legs.forEach((leg, i) => { leg.rotation.x = swing * (i ? 1 : -1); });
+    meerkat.userData.arms.forEach((arm, i) => { arm.rotation.x = -0.55 + swing * 0.5 * (i ? -1 : 1); });
+    meerkat.userData.body.rotation.z = Math.sin(now / 180) * 0.03;
+    meerkat.userData.head.rotation.y = Math.sin(now / 900) * 0.25;
+
+    // объекты приближаются
+    for (let i = objects.length - 1; i >= 0; i--){
+      const o = objects[i];
+      o.mesh.position.z += S.speed * dt;
+      if (o.kind === 'beetle'){
+        o.mesh.rotation.y += dt * 3;
+        o.mesh.position.y = 1.1 + Math.sin(now / 300 + o.mesh.position.z) * 0.12;
+      }
+      // столкновения
+      const dz = o.mesh.position.z - meerkat.position.z;
+      if (!o.taken && Math.abs(dz) < 1.15 && Math.abs(o.mesh.position.x - meerkat.position.x) < 1.5){
+        if (o.kind === 'beetle' && S.y < 2.2){
+          o.taken = true; S.beetles++; elB.textContent = String(S.beetles);
+          scene.remove(o.mesh); objects.splice(i, 1);
+          continue;
+        }
+        if (o.kind !== 'beetle' && S.y < (o.kind === 'cactus' ? 2.0 : 1.25)){
+          camShake = 0.5;
+          gameOver();
+          break;
+        }
+      }
+      if (o.mesh.position.z > 12){ scene.remove(o.mesh); objects.splice(i, 1); }
+    }
+    // подсев новых
+    while (objects.length < 16){
+      const zMin = Math.min.apply(null, objects.map(o => o.mesh.position.z).concat([-60]));
+      spawnObject(zMin - 6 - Math.random() * 6);
+    }
+
+    // камера
+    camera.position.x += (S.x * 0.35 - camera.position.x) * Math.min(1, dt * 6);
+    camera.position.y = 7.4 + Math.sin(now / 900) * 0.06 + S.y * 0.06;
+    camera.lookAt(S.x * 0.5, 2.4 + S.y * 0.2, -16);
+
+    // текстура полос — «уезжает» под ногами
+    stripeTex.offset.y -= dt * (S.speed / 26);
+
+    // пыль летит назад
+    const dp = dustGeo.attributes.position;
+    for (let i = 0; i < dustN; i++){
+      let z = dp.getZ(i) + S.speed * dt * 1.4;
+      if (z > 16){ z = -2; dp.setX(i, (Math.random() - 0.5) * 7 + S.x); }
+      dp.setZ(i, z);
+      dp.setY(i, Math.max(0.05, dp.getY(i) - dt * 0.35));
+      if (dp.getY(i) < 0.06 && Math.random() < 0.05){ dp.setY(i, 0.6 + Math.random()); }
+    }
+    dp.needsUpdate = true;
+  } else {
+    meerkat.userData.head.rotation.y = Math.sin(now / 1400) * 0.35;
+    meerkat.userData.body.rotation.z = Math.sin(now / 1100) * 0.02;
+  }
+
+  if (camShake > 0){
+    camShake -= dt * 2;
+    camera.position.x += (Math.random() - 0.5) * camShake * 0.6;
+    camera.position.y += (Math.random() - 0.5) * camShake * 0.4;
+  }
+
+  // солнце чуть живёт
+  sun.material.opacity = 0.92 + Math.sin(now / 2600) * 0.05;
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+document.getElementById('start').onclick = start;
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* прогреваем сцену под оверлеем */
+resetWorld();
+
+// для автотестов
+window.__DUNES = { S, objects, moveLane, jump, start, meerkat };
+</script>
+</body>
+</html>

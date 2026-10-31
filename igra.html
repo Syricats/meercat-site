@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Игры сурикатов — meercat.ru</title>
-<meta name="description" content="Восемь маленьких игр про сурикатов: часовой, пары, жуки, бегун, норы, момент, викторина и тень.">
+<meta name="description" content="Девять маленьких игр про сурикатов: копай глубже, часовой, пары, жуки, бегун, норы, момент, викторина и тень.">
 <meta name="theme-color" content="#f7f1e6">
 <link rel="icon" href="img/favicon.png">
 <style>
@@ -101,6 +101,16 @@
   .qopt.right{background:rgba(122,139,58,.22);border-color:var(--green)}
   .qopt.wrong{background:rgba(178,59,46,.16);border-color:var(--bad)}
   .qopt:disabled{cursor:default}
+  .hero3d{display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:linear-gradient(120deg,#2a1a2e,#7a3a24 60%,#c9742f);
+    border-radius:20px;padding:18px 20px;margin:0 0 16px;box-shadow:0 18px 40px rgba(90,50,20,.28);color:#fff8ec}
+  .hero3d .t{flex:1;min-width:210px}
+  .hero3d h3{margin:0 0 6px;font-size:19px}
+  .hero3d p{font-size:14px;opacity:.9;line-height:1.5;margin:0}
+  .hero3d a.btn{background:#fff8ec;color:#7a3a24;text-decoration:none;white-space:nowrap}
+  .pad{display:flex;gap:10px;justify-content:center;margin-top:12px}
+  .pad button{width:74px;height:64px;border-radius:16px;border:1px solid var(--line);background:var(--card);
+    font-size:22px;font-weight:800;color:var(--ink);cursor:pointer;user-select:none;touch-action:none}
+  .pad button:active{background:var(--sand2);transform:translateY(1px)}
   footer{margin:34px 0 30px;color:var(--dim);font-size:13.5px;display:flex;gap:14px;flex-wrap:wrap}
   footer a{text-decoration:none;border-bottom:1px dotted var(--dim)}
   @media (max-width:520px){
@@ -126,11 +136,21 @@
 
 <main class="wrap">
   <h1>Игры <span>сурикатов</span></h1>
-  <p class="lead">Восемь маленьких игр: часовой, пары, жуки, бегун, норы, момент, викторина и тень.
+  <p class="lead">Девять маленьких игр: копай глубже, часовой, пары, жуки, бегун, норы, момент, викторина и тень.
   Ничего не скачивается, рекорды остаются в твоём браузере.</p>
+
+  <a class="hero3d" href="dunes.html" style="text-decoration:none">
+    <div class="t">
+      <h3>Дюны 3D — новая игра</h3>
+      <p>Настоящая трёхмерная пустыня на закате: сурикат бежит по дюнам, собирает жуков и уворачивается от камней.
+      Нужен интернет — графика подгружается из сети.</p>
+    </div>
+    <span class="btn">Играть</span>
+  </a>
 
   <div class="tabs" id="tabs">
     <button class="tab on" data-panel="watch">Часовой</button>
+    <button class="tab" data-panel="dig">Копай глубже</button>
     <button class="tab" data-panel="pairs">Пары</button>
     <button class="tab" data-panel="bugs">Жуки</button>
     <button class="tab" data-panel="run">Бегун</button>
@@ -156,6 +176,31 @@
       </div>
     </div>
     <p class="hint">Опасности падают сверху. Пригнись в нужный момент — и сурикат останется целым.</p>
+  </section>
+
+
+  <!-- КОПАЙ ГЛУБЖЕ -->
+  <section class="panel" id="panel-dig">
+    <div class="board">
+      <canvas id="cvDig"></canvas>
+      <div class="hud">
+        <span class="pill">Глубина: <b id="dDepth">0</b></span>
+        <span class="pill">Жуки: <b id="dWorms">0</b></span>
+        <span class="lives" id="dLives">●●●</span>
+      </div>
+      <div class="overlay" id="dOv">
+        <h2>Копай глубже</h2>
+        <p>Копай вниз кнопкой «▼», ходи влево-вправо. Собирай жуков, обходи камни и не попадайся скорпионам.
+        Камни падают, если под ними пусто — не стой под ними.</p>
+        <button class="btn" id="dStart">Копать</button>
+      </div>
+    </div>
+    <div class="pad">
+      <button id="dLeft" aria-label="влево">◀</button>
+      <button id="dDown" aria-label="вниз">▼</button>
+      <button id="dRight" aria-label="вправо">▶</button>
+    </div>
+    <p class="hint">Рекорд глубины: <b id="dBest">0</b>. Чем глубже, тем больше камней и скорпионов.</p>
   </section>
 
   <!-- ПАРЫ -->
@@ -346,6 +391,7 @@ function drawGround(ctx, W, H){
 /* ======================= вкладки ======================= */
 var RESIZERS = {
   watch: function(){ if (window.WATCH) WATCH.resize(); },
+  dig: function(){ if (window.DIG) DIG.resize(); },
   bugs: function(){ if (window.BUGS) BUGS.resize(); },
   run: function(){ if (window.RUN) RUN.resize(); },
   moment: function(){ if (window.MOMENT) MOMENT.resize(); },
@@ -976,6 +1022,194 @@ window.SHADOW = (function(){
   $('sStart').onclick = start;
   return { resize: C.resize, state: G, start: start, moveAt: moveAt };
 })();
+
+/* ======================= 9. Копай глубже ======================= */
+window.DIG = (function(){
+  var C = setupCanvas($('cvDig')), ctx = C.ctx;
+  var COLS = 8, VIEW = 11, cell = 40;
+  var G = { running:false, lives:3, worms:0, depth:0, grid:[], pr:0, pc:4,
+            top:0, cam:0, hitFlash:0, tick:0, dead:false };
+  var best = ls('mrk_dig_best');
+  $('dBest').textContent = best;
+
+  function cellSize(){
+    var cs = Math.min(C.W / COLS, C.H / VIEW);
+    return Math.max(28, Math.floor(cs));
+  }
+  function hud(){
+    $('dDepth').textContent = G.depth;
+    $('dWorms').textContent = G.worms;
+    $('dLives').textContent = G.lives > 0 ? '●●●'.slice(0, G.lives) : '—';
+  }
+  function genRow(r){
+    var rockP = Math.min(0.22, 0.06 + r * 0.0012);
+    var scorpP = Math.min(0.10, 0.01 + r * 0.0008);
+    var row = [];
+    for (var c = 0; c < COLS; c++){
+      var v = Math.random();
+      if (v < rockP) row.push(2);
+      else if (v < rockP + scorpP) row.push(4);
+      else if (v < rockP + scorpP + 0.06) row.push(3);
+      else row.push(1);
+    }
+    return row;
+  }
+  function ensureRow(r){
+    while (G.grid.length <= r + VIEW) G.grid.push(genRow(G.grid.length));
+  }
+  function start(){
+    G.running = true; G.dead = false; G.lives = 3; G.worms = 0; G.depth = 0;
+    G.pr = 0; G.pc = 4; G.top = 0; G.cam = 0; G.hitFlash = 0; G.tick = 0;
+    G.grid = [];
+    for (var r = 0; r < VIEW + 4; r++) G.grid.push(genRow(r));
+    // верхние ряды делаем свободными вокруг игрока
+    for (var c = 0; c < COLS; c++){ G.grid[0][c] = 1; }
+    G.grid[0][G.pc] = 0;
+    $('dOv').classList.add('hide'); hud();
+  }
+  function over(){
+    G.running = false;
+    if (G.depth > best){ best = G.depth; ls('mrk_dig_best', best); $('dBest').textContent = best; }
+    $('dOv').querySelector('h2').textContent = 'Нора обвалилась';
+    $('dOv').querySelector('p').textContent = 'Глубина: ' + G.depth + ' м. Жуков: ' + G.worms + '. Рекорд: ' + best + ' м.';
+    $('dStart').textContent = 'Ещё раз';
+    $('dOv').classList.remove('hide');
+  }
+  function loseLife(){
+    G.lives--; G.hitFlash = 0.5; hud();
+    if (G.lives <= 0){ over(); return; }
+    // возвращаем игрока на пару клеток выше
+    G.pr = Math.max(0, G.pr - 2);
+    G.cam = Math.max(0, G.pr - 3);
+    for (var c = 0; c < COLS; c++) if (G.grid[G.pr][c] !== 2) G.grid[G.pr][c] = 0;
+    G.grid[G.pr][G.pc] = 0;
+  }
+  function move(dx, dy){
+    if (!G.running) return;
+    var nr = G.pr + dy, nc = G.pc + dx;
+    if (nc < 0 || nc >= COLS || nr < 0) return;
+    ensureRow(nr);
+    var t = G.grid[nr][nc];
+    if (t === 2) return;                       // камень не прокопать
+    if (t === 4){ loseLife(); return; }         // скорпион
+    if (t === 3){ G.worms++; }
+    G.grid[nr][nc] = 0;
+    G.pr = nr; G.pc = nc;
+    if (G.pr > G.depth) G.depth = G.pr;
+    if (G.pr - 3 > G.cam) G.cam = G.pr - 3;
+    hud();
+  }
+  function step(){
+    if (!G.running) return;
+    // камни падают
+    for (var r = G.grid.length - 2; r >= 1; r--){
+      for (var c = 0; c < COLS; c++){
+        if (G.grid[r][c] !== 2) continue;
+        var below = G.grid[r + 1][c];
+        if (below === 0){
+          if (r + 1 === G.pr && c === G.pc){ G.grid[r][c] = 0; loseLife(); }
+          else { G.grid[r + 1][c] = 2; G.grid[r][c] = 0; }
+        }
+      }
+    }
+    // скорпионы ползают
+    for (var r2 = Math.max(0, G.pr - 2); r2 < Math.min(G.grid.length, G.pr + VIEW); r2++){
+      for (var c2 = 0; c2 < COLS; c2++){
+        if (G.grid[r2][c2] !== 4) continue;
+        if (Math.random() < 0.5) continue;
+        var dr = (Math.random() < 0.5 ? -1 : 1), dc = (Math.random() < 0.5 ? -1 : 1);
+        var nr = r2 + dr, nc = c2 + dc;
+        if (nr < 0 || nr >= G.grid.length || nc < 0 || nc >= COLS) continue;
+        if (G.grid[nr][nc] === 0){
+          if (nr === G.pr && nc === G.pc){ G.grid[r2][c2] = 0; loseLife(); }
+          else { G.grid[nr][nc] = 4; G.grid[r2][c2] = 0; }
+        }
+      }
+    }
+    ensureRow(G.cam + VIEW + 2);
+  }
+  var last = 0;
+  function loop(now){
+    var dt = Math.min(0.05, (last ? now - last : 16) / 1000); last = now;
+    if (G.hitFlash > 0) G.hitFlash -= dt;
+    if (G.running){
+      G.tick += dt;
+      if (G.tick > 0.28){ G.tick = 0; step(); }
+    }
+
+    var W = C.W, H = C.H;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#efe0c6'; ctx.fillRect(0, 0, W, H);
+
+    cell = cellSize();
+    var offX = (W - cell * COLS) / 2;
+    var camRow = G.cam;
+
+    // тайлы
+    for (var r = 0; r < VIEW + 1; r++){
+      var gr = Math.floor(camRow) + r;
+      if (!G.grid[gr]) continue;
+      for (var c = 0; c < COLS; c++){
+        var v = G.grid[gr][c];
+        if (!v) continue;
+        var x = offX + c * cell, y = H - (VIEW - r) * cell;
+        if (v === 1){ ctx.fillStyle = (gr % 2 ? '#e2cda6' : '#dcc49a'); ctx.fillRect(x, y, cell - 2, cell - 2); }
+        else if (v === 2){
+          ctx.fillStyle = '#8a8177'; ctx.beginPath();
+          ctx.arc(x + cell / 2, y + cell / 2, cell * 0.42, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.beginPath();
+          ctx.arc(x + cell * 0.4, y + cell * 0.4, cell * 0.12, 0, Math.PI * 2); ctx.fill();
+        }
+        else if (v === 3){
+          ctx.fillStyle = '#c96b8f'; ctx.beginPath();
+          ctx.ellipse(x + cell / 2, y + cell / 2, cell * 0.26, cell * 0.16, 0, 0, Math.PI * 2); ctx.fill();
+        }
+        else if (v === 4){
+          ctx.fillStyle = '#b8541f'; ctx.beginPath();
+          ctx.ellipse(x + cell / 2, y + cell / 2, cell * 0.3, cell * 0.18, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#b8541f'; ctx.lineWidth = 2; ctx.beginPath();
+          ctx.moveTo(x + cell * 0.68, y + cell * 0.46);
+          ctx.quadraticCurveTo(x + cell * 0.9, y + cell * 0.28, x + cell * 0.76, y + cell * 0.2);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // игрок
+    var px = offX + G.pc * cell, py = H - (VIEW - (G.pr - camRow)) * cell;
+    ctx.save();
+    if (G.hitFlash > 0){ ctx.globalAlpha = 0.55 + 0.45 * Math.sin(now / 60); }
+    drawMeerkat(ctx, px + cell / 2, py + cell * 0.92, cell / 62, false);
+    ctx.restore();
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  function press(kind){
+    if (kind === 'l') move(-1, 0);
+    else if (kind === 'r') move(1, 0);
+    else move(0, 1);
+  }
+  function hold(btn, kind){
+    var t = null;
+    function down(e){ e.preventDefault(); press(kind); t = setInterval(function(){ press(kind); }, 180); }
+    function up(){ if (t){ clearInterval(t); t = null; } }
+    btn.addEventListener('pointerdown', down);
+    btn.addEventListener('pointerup', up);
+    btn.addEventListener('pointercancel', up);
+    btn.addEventListener('pointerleave', up);
+  }
+  hold($('dLeft'), 'l'); hold($('dDown'), 'd'); hold($('dRight'), 'r');
+  window.addEventListener('keydown', function(e){
+    if (e.code === 'ArrowLeft') press('l');
+    if (e.code === 'ArrowRight') press('r');
+    if (e.code === 'ArrowDown' || e.code === 'Space'){ e.preventDefault(); press('d'); }
+  });
+  $('dStart').onclick = start;
+  return { resize: C.resize, state: G, start: start, move: move, step: step, press: press };
+})();
+
 </script>
 </body>
 </html>
