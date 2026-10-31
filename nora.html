@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Нора суриката — защита от чудовищ</title>
+<meta name="description" content="Мультяшная защита норы: сурикат отбивается от скелетов, орков, пауков и драконов. Прокачка удара.">
+<meta name="theme-color" content="#5aa63a">
+<link rel="icon" href="img/favicon.png">
+<style>
+  :root{
+    --ink:#2a1c33; --ink2:#3d2a4a;
+    --grass:#8ed24a; --grass2:#7cc63c; --grass3:#9bdc57;
+    --purple:#5b3a72; --purple2:#432a58;
+    --pink:#ff6b8a; --pink2:#e8476a;
+    --gold:#ffc93c; --gold2:#f0a81f;
+    --cream:#fff6e2;
+    --panel:#2d1b3d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    background:#0a1408;
+    font-family:"Nunito","Segoe UI",Roboto,-apple-system,Arial,sans-serif;
+    background:#0d1a10;color:var(--cream);overflow:hidden;
+    user-select:none;
+  }
+  #app{position:fixed;inset:0;display:flex;flex-direction:column;max-width:820px;margin:0 auto;
+  box-shadow:0 0 0 3px #16240f, 0 0 80px rgba(0,0,0,.7)}
+
+  /* ---------- игровое поле ---------- */
+  #field{
+    position:relative;flex:1;overflow:hidden;
+    background:
+      radial-gradient(circle at 50% 46%, rgba(255,255,255,.16), transparent 55%),
+      repeating-conic-gradient(from 0deg at 50% 50%, var(--grass) 0 25%, var(--grass2) 0 50%) 0 0/84px 84px,
+      var(--grass);
+  }
+  #field::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(circle at 50% 50%, transparent 40%, rgba(20,60,20,.28) 100%);
+  }
+
+  /* нора */
+  .burrow{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);z-index:6}
+  .burrow svg{display:block;width:var(--burrow,132px);height:auto;filter:drop-shadow(0 10px 14px rgba(20,50,15,.35))}
+  .burrow .hp{position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);
+    display:flex;gap:3px}
+  .burrow .hp i{width:14px;height:14px;display:block}
+  .burrow .hp i svg{width:100%;height:100%}
+  .burrow .hp i.lost{opacity:.28;filter:grayscale(1)}
+
+  /* цель-круг */
+  .ring{position:absolute;left:50%;top:46%;width:var(--ring,300px);height:var(--ring,300px);
+    transform:translate(-50%,-50%);border-radius:50%;border:3px dashed rgba(255,255,255,.5);
+    z-index:2;pointer-events:none;opacity:.75}
+
+  /* герой */
+  .hero{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);z-index:7;
+    width:var(--hero,64px);height:var(--hero,64px);will-change:transform}
+  .hero svg{width:100%;height:100%;overflow:visible}
+
+  /* враги */
+  .mob{position:absolute;left:0;top:0;width:var(--mob,54px);height:var(--mob,54px);
+    z-index:5;will-change:transform;transition:none}
+  .mob svg{width:100%;height:100%;overflow:visible}
+  .mob.hit{animation:hitFlash .18s}
+  @keyframes hitFlash{0%{filter:brightness(2.4)}100%{filter:none}}
+  .mob.dying{animation:diePuff .35s forwards}
+  @keyframes diePuff{to{transform:translate(var(--x),var(--y)) scale(.2);opacity:0}}
+  .mob .bar{position:absolute;left:16%;right:16%;top:-8px;height:4px;border-radius:3px;border:1px solid rgba(0,0,0,.4);
+    background:rgba(0,0,0,.35);overflow:hidden}
+  .mob .bar b{display:block;height:100%;background:#7ee06a;border-radius:3px;transition:width .12s}
+
+  /* пули */
+  .shot{position:absolute;left:0;top:0;width:16px;height:16px;z-index:8;pointer-events:none}
+  .shot svg{width:100%;height:100%}
+
+  /* всплывашки */
+  .pop{position:absolute;z-index:20;font-weight:900;font-size:15px;color:#fff;
+    text-shadow:0 2px 0 rgba(0,0,0,.35);pointer-events:none;animation:popUp .9s forwards}
+  @keyframes popUp{0%{transform:translate(-50%,0) scale(.7);opacity:0}
+    25%{transform:translate(-50%,-14px) scale(1.15);opacity:1}
+    100%{transform:translate(-50%,-46px) scale(1);opacity:0}}
+  .pop.gold{color:var(--gold)}
+
+  /* ---------- HUD ---------- */
+  .hud-top{position:absolute;left:0;right:0;top:0;padding:9px 10px;z-index:30;pointer-events:none;
+    display:flex;flex-direction:column;align-items:center;gap:6px}
+  .wave{
+    display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,#6b4791,#4a2f66);
+    border:3px solid #2a1a3a;border-radius:14px;padding:5px 16px;box-shadow:0 4px 0 #241432;
+  }
+  .wave .t{font-size:15px;font-weight:900;letter-spacing:.02em}
+  .wave .sub{display:flex;gap:9px;align-items:center;font-size:11.5px;font-weight:800;color:#e7d6ff}
+  .wave .sub b{display:flex;align-items:center;gap:3px}
+  .wave .sub svg{width:12px;height:12px}
+
+  .wallet{position:absolute;left:10px;top:74px;z-index:30;display:flex;flex-direction:column;gap:7px}
+  .coin{display:flex;align-items:center;gap:7px;background:rgba(30,18,42,.82);
+    border:2px solid rgba(255,255,255,.14);border-radius:12px;padding:4px 12px 4px 5px;
+    font-size:16px;font-weight:900;min-width:86px}
+  .coin svg{width:26px;height:26px;flex:none}
+  .coin small{font-size:10px;opacity:.6;font-weight:800;display:block;line-height:1}
+
+  .getbtn{position:absolute;right:10px;top:74px;z-index:30;
+    background:linear-gradient(180deg,#ffd873,#f0a12a);color:#4a2c05;border:3px solid #8a5a10;
+    border-radius:14px;padding:7px 14px;font-size:13.5px;font-weight:900;cursor:pointer;
+    box-shadow:0 4px 0 #7a4c08;display:flex;align-items:center;gap:6px}
+  .getbtn:active{transform:translateY(2px);box-shadow:0 2px 0 #7a4c08}
+  .getbtn svg{width:20px;height:20px}
+
+  .nextwave{position:absolute;right:14px;bottom:12px;z-index:30;width:74px;height:74px;
+    border-radius:20px;cursor:pointer;border:4px solid #2a1a3a;
+    background:radial-gradient(circle at 50% 40%, #ff8a3d, #d13f18 70%);
+    box-shadow:0 6px 0 #7a2410, inset 0 0 22px rgba(255,220,120,.5);
+    display:flex;align-items:center;justify-content:center;animation:nextPulse 1.6s infinite}
+  .nextwave svg{width:44px;height:44px}
+  .nextwave:active{transform:translateY(2px)}
+  @keyframes nextPulse{0%,100%{box-shadow:0 6px 0 #7a2410, inset 0 0 22px rgba(255,220,120,.5)}
+    50%{box-shadow:0 6px 0 #7a2410, inset 0 0 34px rgba(255,240,170,.85)}}
+
+  /* ---------- панель прокачки ---------- */
+  .panel{position:relative;z-index:25;background:linear-gradient(180deg,#33203f,#221329);
+    border-top:4px solid #1a0e22;padding:8px 8px 10px;display:flex;flex-direction:column;gap:7px}
+  .tabs{display:flex;gap:6px}
+  .tab{flex:1;border-radius:12px 12px 0 0;padding:6px 8px;font-size:12px;font-weight:900;
+    display:flex;align-items:center;justify-content:center;gap:6px;border:2px solid transparent;
+    background:#3a2748;color:#b9a6c9}
+  .tab.on{background:linear-gradient(180deg,#ff7d99,#e8476a);color:#fff;border-color:#8d1e39;
+    box-shadow:0 -2px 0 rgba(255,255,255,.25) inset}
+  .tab svg{width:16px;height:16px}
+
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .card{background:linear-gradient(180deg,#3d2a4e,#2b1b38);border:2px solid #1f1229;
+    border-radius:12px;padding:6px 8px;display:flex;align-items:center;gap:8px;
+    box-shadow:0 3px 0 #1a0f22}
+  .card .ico{width:26px;height:26px;flex:none}
+  .card .txt{flex:1;min-width:0}
+  .card .nm{font-size:11px;font-weight:800;color:#d9c8e6;line-height:1.1}
+  .card .vl{font-size:14.5px;font-weight:900;color:#fff;line-height:1.15}
+  .buy{border:2px solid #8a5a10;background:linear-gradient(180deg,#ffe08a,#f0a81f);color:#4a2c05;
+    border-radius:10px;padding:6px 9px;font-size:12.5px;font-weight:900;cursor:pointer;
+    display:flex;align-items:center;gap:4px;box-shadow:0 3px 0 #7a4c08;min-width:56px;justify-content:center}
+  .buy:active{transform:translateY(1px);box-shadow:0 2px 0 #7a4c08}
+  .buy:disabled{filter:grayscale(.7);opacity:.55}
+  .buy svg{width:14px;height:14px}
+
+  /* ---------- экраны ---------- */
+  .screen{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+    padding:18px;background:radial-gradient(circle at 50% 30%, rgba(60,150,70,.55), rgba(10,26,14,.9));
+    backdrop-filter:blur(3px)}
+  .screen.hidden{display:none}
+  .sheet{width:100%;max-width:400px;background:linear-gradient(180deg,#3a2648,#241531);
+    border:4px solid #150c1d;border-radius:24px;padding:20px;text-align:center;
+    box-shadow:0 24px 60px rgba(0,0,0,.6)}
+  .sheet h1{font-size:24px;line-height:1.1;margin-bottom:6px;color:#fff2c9}
+  .sheet p{font-size:13.5px;color:#c9b6da;line-height:1.5;margin-bottom:14px}
+  .big{width:100%;border:3px solid #7a2410;border-radius:16px;padding:14px;font-size:17px;font-weight:900;
+    color:#3d1a05;background:linear-gradient(180deg,#ffd873,#ef9f22);cursor:pointer;
+    box-shadow:0 5px 0 #7a4c08}
+  .big:active{transform:translateY(2px);box-shadow:0 3px 0 #7a4c08}
+  .stats{display:flex;justify-content:center;gap:16px;margin:12px 0 4px;font-size:13px;color:#d9c8e6}
+  .stats b{color:#ffe08a;font-size:16px;display:block}
+
+  .toast{position:fixed;left:50%;top:16%;transform:translate(-50%,-12px);z-index:70;opacity:0;
+    transition:.28s;pointer-events:none;text-align:center}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  .toast .b{background:linear-gradient(180deg,#6b4791,#432a58);border:3px solid #241432;
+    border-radius:14px;padding:9px 20px;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+  .toast .t{font-size:10px;letter-spacing:.16em;color:#cbb6e0;text-transform:uppercase;font-weight:800}
+  .toast .n{font-size:17px;font-weight:900;color:#fff2c9}
+
+  /* декор */
+  .prop{position:absolute;transform:translate(-50%,-50%);pointer-events:none;z-index:1;opacity:.95}
+  .dirt{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);
+    width:calc(var(--burrow,132px) * 1.85);height:calc(var(--burrow,132px) * 1.05);
+    border-radius:50%;z-index:0;
+    background:radial-gradient(ellipse at 50% 50%, rgba(150,110,60,.55), rgba(150,110,60,0) 70%)}
+
+  /* тряска при уроне */
+  .shake{animation:shake .32s}
+  @keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-5px,3px)}
+    50%{transform:translate(4px,-3px)}75%{transform:translate(-3px,-2px)}}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="field">
+    <div class="dirt"></div>
+    <div id="props"></div>
+    <div class="ring" id="ring"></div>
+    <div class="burrow" id="burrow"></div>
+    <div class="hero" id="hero"></div>
+
+    <div class="hud-top">
+      <div class="wave">
+        <span class="t" id="waveT">Волна 1</span>
+        <span class="sub">
+          <b><svg viewBox="0 0 24 24" fill="#ffd0a0"><path d="M14.5 2.5 21 9l-2 2-1.2-1.2-7.3 7.3 1 1-2.5 2.5-2-2-2.6 2.6-1.4-1.4 2.6-2.6-2-2 2.5-2.5 1 1 7.3-7.3L13.3 4.5z"/></svg><span id="mobLeft">0</span></b>
+          <b><svg viewBox="0 0 24 24" fill="#ff5e7a"><path d="M12 21s-8-4.7-8-10a4.6 4.6 0 0 1 8-3.1A4.6 4.6 0 0 1 20 11c0 5.3-8 10-8 10z"/></svg><span id="hpView">5</span></b>
+        </span>
+      </div>
+    </div>
+
+    <div class="wallet">
+      <div class="coin"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ffd24a" stroke="#a9761a" stroke-width="2"/><circle cx="12" cy="12" r="6" fill="#ffb524"/><text x="12" y="16" text-anchor="middle" font-size="9" font-weight="900" fill="#7a4c05">￥</text></svg>
+        <span><small>жуки</small><span id="coins">0</span></span></div>
+    </div>
+
+    <button class="getbtn" id="getBtn">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ffd24a" stroke="#a9761a" stroke-width="2"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="900" fill="#7a4c05">￥</text></svg>
+      Получить! <b id="getSum">+30</b>
+    </button>
+
+    <button class="nextwave" id="nextBtn" title="Следующая волна">
+      <svg viewBox="0 0 48 48"><path d="M24 40V14" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+        <path d="M12 24l12-12 12 12" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+  <div class="panel">
+    <div class="tabs">
+      <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 20l7-7M9 4l11 11"/></svg> АТАКА</div>
+      <div class="tab">УЛУЧШЕНИЯ</div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#ff9a5c" stroke-width="2.2" stroke-linecap="round"><path d="M4 20l6-6"/><path d="M13 4l7 7-6 6-7-7z" fill="#ffb37a" stroke="#a8491a"/></svg></div>
+        <div class="txt"><div class="nm">Урон</div><div class="vl" id="vDmg">14</div></div>
+        <button class="buy" id="upDmg"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#ffd24a" stroke="#a9761a" stroke-width="2"/></svg><span>25</span></button>
+      </div>
+
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#ffd166" stroke-width="2.2" stroke-linecap="round"><path d="M12 3l2.6 5.6L21 9.4l-4.4 4.3 1 6.3L12 17l-5.6 3 1-6.3L3 9.4l6.4-.8z" fill="#ffe08a" stroke="#a9761a"/></svg></div>
+        <div class="txt"><div class="nm">Шанс крита</div><div class="vl" id="vCritC">1%</div></div>
+        <button class="buy" id="upCritC"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#ffd24a" stroke="#a9761a" stroke-width="2"/></svg><span>6</span></button>
+      </div>
+
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#8fd6ff" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="13" r="8" fill="#bfe6ff" stroke="#2e7fa8"/><path d="M12 13V9M12 13l3 2"/><path d="M9 2h6"/></svg></div>
+        <div class="txt"><div class="nm">Скорость атаки</div><div class="vl" id="vRate">1.15</div></div>
+        <button class="buy" id="upRate"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#ffd24a" stroke="#a9761a" stroke-width="2"/></svg><span>14</span></button>
+      </div>
+
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#c9a6ff" stroke-width="2.2"><path d="M12 2l3 6 6 1-4.5 4.4 1 6.1L12 16.8 6.5 19.5l1-6.1L3 9l6-1z" fill="#dcc0ff" stroke="#6a3fa0"/></svg></div>
+        <div class="txt"><div class="nm">Множитель крита</div><div class="vl" id="vCritM">x1.2</div></div>
+        <button class="buy" id="upCritM"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#ffd24a" stroke="#a9761a" stroke-width="2"/></svg><span>10</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="b"><div class="t" id="toastT"></div><div class="n" id="toastN"></div></div></div>
+
+<!-- старт -->
+<div class="screen" id="startScreen">
+  <div class="sheet">
+    <h1>Нора суриката</h1>
+    <p>Сурикат один против скелетов, орков, пауков и драконов.
+    Отбивай волны, собирай жуков и прокачивай удар.</p>
+    <button class="big" id="startBtn">ИГРАТЬ</button>
+  </div>
+</div>
+
+<!-- конец -->
+<div class="screen hidden" id="overScreen">
+  <div class="sheet">
+    <h1>Нору раскопали...</h1>
+    <p>Ничего, сурикаты копают новую. Ещё раз?</p>
+    <div class="stats">
+      <div>Волн<b id="endWave">0</b></div>
+      <div>Побеждено<b id="endKills">0</b></div>
+      <div>Жуков<b id="endCoins">0</b></div>
+    </div>
+    <button class="big" id="againBtn">ЕЩЁ РАЗ</button>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   Нора суриката — мультяшная защита
+   ===================================================================== */
+var $ = function(id){ return document.getElementById(id); };
+var field = $('field'), heroEl = $('hero'), burrowEl = $('burrow');
+
+/* ---------------- рисунки ---------------- */
+function svg(vb, inner){ return '<svg viewBox="0 0 ' + vb + ' ' + vb + '">' + inner + '</svg>'; }
+
+var ART = {
+  burrow: svg(100,
+    '<ellipse cx="50" cy="86" rx="34" ry="8" fill="#3f6b1f" opacity=".35"/>' +
+    '<path d="M8 84c0-26 19-46 42-46s42 20 42 46z" fill="#d9a45e" stroke="#3a2413" stroke-width="4" stroke-linejoin="round"/>' +
+    '<path d="M14 74c3-16 15-30 32-33" stroke="#efc489" stroke-width="5" fill="none" stroke-linecap="round" opacity=".8"/>' +
+    '<ellipse cx="50" cy="66" rx="16" ry="12" fill="#7a4a20"/>' +
+    '<ellipse cx="50" cy="67" rx="12.5" ry="9" fill="#160d05"/>' +
+    '<path d="M26 46c-2-8 2-13 6-16M36 41c-1-7 1-11 4-13M64 41c1-7-1-11-4-13M74 46c2-8-2-13-6-16" stroke="#4f8f2e" stroke-width="3.4" stroke-linecap="round" fill="none"/>' +
+    '<circle cx="44" cy="66" r="2.6" fill="#ffe9a8"/><circle cx="56" cy="66" r="2.6" fill="#ffe9a8"/>'
+  ),
+
+  hero: svg(100,
+    '<ellipse cx="50" cy="94" rx="22" ry="4" fill="#2f521a" opacity=".3"/>' +
+    '<path d="M36 84h6l-1 8h-5zM58 84h6l1 8h-5z" fill="#a8703a" stroke="#3a2413" stroke-width="2.4"/>' +
+    '<path d="M50 22c-12 0-19 8-19 19 0 11 4 20 8 27 4 6 6 11 6 16h10c0-5 2-10 6-16 4-7 8-16 8-27 0-11-7-19-19-19z" ' +
+      'fill="#e8c79a" stroke="#3a2413" stroke-width="3.4" stroke-linejoin="round"/>' +
+    '<ellipse cx="50" cy="76" rx="9" ry="11" fill="#fff3dc"/>' +
+    '<ellipse cx="38" cy="38" rx="5" ry="6.5" fill="#c08a4a" stroke="#3a2413" stroke-width="2.2"/>' +
+    '<ellipse cx="62" cy="38" rx="5" ry="6.5" fill="#c08a4a" stroke="#3a2413" stroke-width="2.2"/>' +
+    '<ellipse cx="50" cy="42" rx="15" ry="13" fill="#f0d7ad" stroke="#3a2413" stroke-width="3"/>' +
+    '<circle cx="43" cy="40" r="4.6" fill="#241407"/><circle cx="57" cy="40" r="4.6" fill="#241407"/>' +
+    '<circle cx="44.6" cy="38.4" r="1.6" fill="#fff"/><circle cx="58.6" cy="38.4" r="1.6" fill="#fff"/>' +
+    '<ellipse cx="50" cy="50" rx="4.4" ry="3.4" fill="#3a2415"/>' +
+    '<path d="M45 56c2.6 2.4 7.4 2.4 10 0" stroke="#3a2415" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+    '<path d="M66 58c6 2 10 6 12 11" stroke="#a8703a" stroke-width="7" stroke-linecap="round"/>' +
+    '<path d="M66 58c6 2 10 6 12 11" stroke="#3a2413" stroke-width="9.6" stroke-linecap="round" opacity=".18"/>' +
+    '<circle cx="80" cy="70" r="7" fill="#c98b3b" stroke="#3a2413" stroke-width="2.6"/>'
+  ),
+
+  skeleton: svg(100,
+    '<ellipse cx="50" cy="94" rx="20" ry="3.6" fill="#2f521a" opacity=".3"/>' +
+    '<path d="M38 78l-2 14M62 78l2 14" stroke="#e8e2d4" stroke-width="6" stroke-linecap="round"/>' +
+    '<path d="M36 44h28l-3 34H39z" fill="#f2ede2" stroke="#5a5142" stroke-width="3.4" stroke-linejoin="round"/>' +
+    '<path d="M42 50h16M42 58h16M42 66h16" stroke="#cfc6b4" stroke-width="2.6" stroke-linecap="round"/>' +
+    '<circle cx="50" cy="27" r="15" fill="#faf6ec" stroke="#5a5142" stroke-width="3.4"/>' +
+    '<circle cx="44" cy="25" r="4.6" fill="#2a2320"/><circle cx="56" cy="25" r="4.6" fill="#2a2320"/>' +
+    '<circle cx="45" cy="24" r="1.4" fill="#fff"/><circle cx="57" cy="24" r="1.4" fill="#fff"/>' +
+    '<path d="M46 34h8M49 34v4M52 34v4" stroke="#5a5142" stroke-width="2.2" stroke-linecap="round"/>' +
+    '<path d="M30 52c-4 2-6 6-6 10M70 52c4 2 6 6 6 10" stroke="#e8e2d4" stroke-width="5" stroke-linecap="round"/>'
+  ),
+
+  orc: svg(100,
+    '<ellipse cx="50" cy="95" rx="24" ry="3.6" fill="#2f521a" opacity=".3"/>' +
+    '<path d="M38 84l-4 11M62 84l4 11" stroke="#4b7a2a" stroke-width="8" stroke-linecap="round"/>' +
+    '<path d="M28 58c0-12 10-20 22-20s22 8 22 20v18c0 7-10 11-22 11s-22-4-22-11z" ' +
+      'fill="#79b545" stroke="#2c4c17" stroke-width="3.4" stroke-linejoin="round"/>' +
+    '<ellipse cx="50" cy="66" rx="12" ry="10" fill="#a3d76a" opacity=".9"/>' +
+    '<circle cx="50" cy="34" r="18" fill="#8ccb54" stroke="#2c4c17" stroke-width="3.4"/>' +
+    '<path d="M32 26c-4-6-4-11 0-14 3 4 6 6 9 7zM68 26c4-6 4-11 0-14-3 4-6 6-9 7z" fill="#8ccb54" stroke="#2c4c17" stroke-width="2.6" stroke-linejoin="round"/>' +
+    '<circle cx="43" cy="32" r="5" fill="#fff"/><circle cx="57" cy="32" r="5" fill="#fff"/>' +
+    '<circle cx="44" cy="33" r="2.6" fill="#1d2f0f"/><circle cx="58" cy="33" r="2.6" fill="#1d2f0f"/>' +
+    '<path d="M40 42c6 4 14 4 20 0" stroke="#2c4c17" stroke-width="3" fill="none" stroke-linecap="round"/>' +
+    '<path d="M43 45l-2 8 4-3M57 45l2 8-4-3" fill="#fff8e0" stroke="#c9b48a" stroke-width="1.6" stroke-linejoin="round"/>' +
+    '<path d="M26 60c-6 3-9 9-9 14M74 60c6 3 9 9 9 14" stroke="#5d9333" stroke-width="7" stroke-linecap="round"/>' +
+    '<path d="M74 70l10-8" stroke="#7a4a20" stroke-width="6" stroke-linecap="round"/>'
+  ),
+
+  spider: svg(100,
+    '<ellipse cx="50" cy="94" rx="20" ry="3.4" fill="#2f521a" opacity=".3"/>' +
+    '<g stroke="#3a2050" stroke-width="4" stroke-linecap="round" fill="none">' +
+      '<path d="M40 60 20 50M40 66 16 66M40 72 20 82M60 60l20-10M60 66l24 0M60 72l20 10"/></g>' +
+    '<ellipse cx="50" cy="68" rx="20" ry="17" fill="#6b3fa0" stroke="#2f1a4a" stroke-width="3.4"/>' +
+    '<path d="M50 54c-3 4-3 8 0 11 3-3 3-7 0-11z" fill="#a476d6"/>' +
+    '<circle cx="50" cy="44" r="16" fill="#8a5cc4" stroke="#2f1a4a" stroke-width="3.4"/>' +
+    '<circle cx="44" cy="42" r="5.4" fill="#fff"/><circle cx="56" cy="42" r="5.4" fill="#fff"/>' +
+    '<circle cx="45" cy="43" r="2.8" fill="#20102e"/><circle cx="57" cy="43" r="2.8" fill="#20102e"/>' +
+    '<path d="M42 52c4 3 12 3 16 0" stroke="#2f1a4a" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+    '<path d="M45 54l-2 4M55 54l2 4" stroke="#2f1a4a" stroke-width="2.4" stroke-linecap="round"/>'
+  ),
+
+  dragon: svg(100,
+    '<ellipse cx="50" cy="95" rx="24" ry="3.6" fill="#2f521a" opacity=".3"/>' +
+    '<path d="M34 52C18 44 12 26 22 18c6 10 14 16 24 19z" fill="#e05a3a" stroke="#6b2010" stroke-width="3" stroke-linejoin="round"/>' +
+    '<path d="M66 52c16-8 22-26 12-34-6 10-14 16-24 19z" fill="#e05a3a" stroke="#6b2010" stroke-width="3" stroke-linejoin="round"/>' +
+    '<path d="M38 84c-4 6-6 10-6 12M62 84c4 6 6 10 6 12" stroke="#b53f22" stroke-width="8" stroke-linecap="round"/>' +
+    '<path d="M72 74c8 2 14 8 16 16-7 1-13-2-18-7z" fill="#e05a3a" stroke="#6b2010" stroke-width="3" stroke-linejoin="round"/>' +
+    '<ellipse cx="50" cy="68" rx="21" ry="19" fill="#f07a4a" stroke="#6b2010" stroke-width="3.4"/>' +
+    '<ellipse cx="50" cy="73" rx="12" ry="12" fill="#ffd9b0" opacity=".9"/>' +
+    '<path d="M38 62c4-3 8-4 12-4s8 1 12 4" stroke="#c9502e" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
+    '<circle cx="50" cy="38" r="17" fill="#f5885a" stroke="#6b2010" stroke-width="3.4"/>' +
+    '<path d="M36 24l-5-9 10 5zM64 24l5-9-10 5z" fill="#ffd166" stroke="#6b2010" stroke-width="2.2" stroke-linejoin="round"/>' +
+    '<ellipse cx="50" cy="46" rx="11" ry="8" fill="#ffc9a1" stroke="#6b2010" stroke-width="2.6"/>' +
+    '<circle cx="43" cy="35" r="5.4" fill="#fff"/><circle cx="57" cy="35" r="5.4" fill="#fff"/>' +
+    '<circle cx="44" cy="36" r="2.8" fill="#2a0f06"/><circle cx="58" cy="36" r="2.8" fill="#2a0f06"/>' +
+    '<circle cx="46" cy="48" r="1.8" fill="#6b2010"/><circle cx="54" cy="48" r="1.8" fill="#6b2010"/>' +
+    '<path d="M45 52h10" stroke="#6b2010" stroke-width="2.2" stroke-linecap="round"/>' +
+    '<path d="M46 52l1 4 1-4M52 52l1 4 1-4" fill="#fff" stroke="#6b2010" stroke-width="1.4"/>'
+  ),
+
+  coin: svg(24, '<circle cx="12" cy="12" r="10" fill="#ffd24a" stroke="#a9761a" stroke-width="2"/><circle cx="12" cy="12" r="6" fill="#ffb524"/>'),
+
+  shot: svg(24, '<circle cx="12" cy="12" r="8" fill="#fff3c4"/><circle cx="12" cy="12" r="5" fill="#ffd24a"/>'
+    + '<path d="M4 12h5M15 12h5M12 4v5M12 15v5" stroke="#ffb524" stroke-width="2" stroke-linecap="round"/>'),
+
+  heart: svg(24, '<path d="M12 21s-8-4.7-8-10a4.6 4.6 0 0 1 8-3.1A4.6 4.6 0 0 1 20 11c0 5.3-8 10-8 10z" fill="#ff5e7a" stroke="#8d1e39" stroke-width="2"/>')
+};
+
+/* ---------------- состояние игры ---------------- */
+var S = {
+  running: false, over: false,
+  coins: 0, kills: 0, wave: 0, hp: 5, maxHp: 5,
+  pending: 0, waveActive: false, betweenTimer: 0,
+  dmg: 16, rate: 1.3, critC: 0.03, critM: 1.2,
+  lvl: { dmg: 0, rate: 0, critC: 0, critM: 0 }
+};
+var COST = { dmg: 25, rate: 14, critC: 6, critM: 10 };
+var MOBS = [], SHOTS = [], lastT = 0, shootTimer = 0, spawnQueue = [], spawnTimer = 0;
+
+var W = 0, H = 0, CX = 0, CY = 0, BURROW_R = 60;
+
+function resize(){
+  var r = field.getBoundingClientRect();
+  W = r.width; H = r.height;
+  CX = W / 2; CY = H * 0.46;
+  var b = Math.max(86, Math.min(150, W * 0.3));
+  document.documentElement.style.setProperty('--burrow', b + 'px');
+  document.documentElement.style.setProperty('--hero', Math.round(b * 0.52) + 'px');
+  document.documentElement.style.setProperty('--mob', Math.round(Math.max(46, Math.min(78, W * 0.17))) + 'px');
+  document.documentElement.style.setProperty('--ring', Math.round(Math.min(W, H) * 0.72) + 'px');
+  BURROW_R = b * 0.36;
+  heroEl.style.top = (CY - b * 0.30) + 'px';
+  heroEl.style.left = CX + 'px';
+}
+
+/* ---------------- декор ---------------- */
+var DECOR = {
+  bush: '<svg viewBox="0 0 100 100"><ellipse cx="50" cy="86" rx="30" ry="6" fill="#2f521a" opacity=".25"/>' +
+    '<circle cx="34" cy="62" r="18" fill="#4f9a2e"/><circle cx="62" cy="60" r="20" fill="#57a832"/>' +
+    '<circle cx="48" cy="48" r="19" fill="#65b93a"/><circle cx="42" cy="44" r="9" fill="#7ccb46" opacity=".8"/></svg>',
+  tree: '<svg viewBox="0 0 100 100"><ellipse cx="50" cy="92" rx="20" ry="5" fill="#2f521a" opacity=".25"/>' +
+    '<rect x="44" y="62" width="12" height="30" rx="4" fill="#7a4a20"/>' +
+    '<path d="M50 6l26 34H24z" fill="#3f8a28"/><path d="M50 24l24 30H26z" fill="#4f9a2e"/><path d="M50 40l20 26H30z" fill="#5fae36"/></svg>',
+  tuft: '<svg viewBox="0 0 100 100"><path d="M50 88c-2-16 0-28 4-38M50 88c-6-14-12-22-20-28M50 88c6-14 12-22 20-28" ' +
+    'stroke="#4f9a2e" stroke-width="6" stroke-linecap="round" fill="none"/></svg>',
+  stone: '<svg viewBox="0 0 100 100"><ellipse cx="50" cy="84" rx="26" ry="6" fill="#2f521a" opacity=".22"/>' +
+    '<path d="M22 78c-4-12 6-24 20-26 14-2 30 8 34 20 2 8-6 12-16 12H34c-6 0-10-2-12-6z" fill="#9aa08f" stroke="#6b7164" stroke-width="3"/></svg>'
+};
+
+function buildProps(){
+  var host = $('props');
+  host.innerHTML = '';
+  var kinds = ['bush','bush','tuft','tuft','stone','tree'];
+  for (var i = 0; i < 26; i++){
+    var a = Math.random() * Math.PI * 2;
+    var r = 0.30 + Math.random() * 0.30;   // от центра в процентах
+    var x = 50 + Math.cos(a) * r * 100;
+    var y = 46 + Math.sin(a) * r * 100;
+    if (x < 4 || x > 96 || y < 6 || y > 96) continue;
+    var d = document.createElement('div');
+    d.className = 'prop';
+    var k = kinds[Math.floor(Math.random() * kinds.length)];
+    var size = k === 'tree' ? 46 + Math.random() * 26 : (k === 'stone' ? 20 + Math.random() * 16 : 26 + Math.random() * 22);
+    d.style.left = x + '%';
+    d.style.top = y + '%';
+    d.style.width = size + 'px';
+    d.style.height = size + 'px';
+    d.innerHTML = DECOR[k];
+    host.appendChild(d);
+  }
+}
+
+/* ---------------- спавн и волны ---------------- */
+var TYPES = [
+  { k: 'skeleton', hp: 1.0, speed: 26, dmg: 1, coin: 1, name: 'Скелет' },
+  { k: 'spider',   hp: 0.8, speed: 38, dmg: 1, coin: 1, name: 'Паук' },
+  { k: 'orc',      hp: 1.7, speed: 22, dmg: 2, coin: 2, name: 'Орк' },
+  { k: 'dragon',   hp: 2.6, speed: 20, dmg: 3, coin: 3, name: 'Дракон' }
+];
+
+function startWave(n){
+  S.wave = n; S.waveActive = true;
+  var count = Math.min(26, 3 + Math.round(n * 1.7));
+  S.pending = count;
+  spawnQueue = [];
+  for (var i = 0; i < count; i++){
+    var roll = Math.random();
+    var pool;
+    if (n < 3) pool = [0, 0, 1];
+    else if (n < 6) pool = [0, 1, 1, 2];
+    else if (n < 10) pool = [0, 1, 2, 2, 3];
+    else pool = [1, 2, 2, 3, 3];
+    var t = TYPES[pool[Math.floor(Math.random() * pool.length)]];
+    spawnQueue.push({ type: t, hpMul: 1 + (n - 1) * 0.16 });
+  }
+  spawnTimer = 0;
+  toast('Волна ' + n, count + ' чудовищ');
+  updateHud();
+}
+
+function spawnEnemy(item){
+  var t = item.type;
+  var ang = Math.random() * Math.PI * 2;
+  var R = Math.min(W, H) * 0.56;
+  var x = CX + Math.cos(ang) * R, y = CY + Math.sin(ang) * R;
+  var el = document.createElement('div');
+  el.className = 'mob';
+  el.innerHTML = ART[t.k] + '<div class="bar"><b style="width:100%"></b></div>';
+  field.appendChild(el);
+  var maxHp = Math.round(18 * (t.hp || 1) * item.hpMul);
+  MOBS.push({
+    el: el, x: x, y: y, hp: maxHp, maxHp: maxHp,
+    speed: t.speed * (0.9 + Math.random() * 0.25) * (1 + S.wave * 0.02),
+    dmg: t.dmg, coin: t.coin, kind: t.k,
+    attackCd: 0, phase: Math.random() * Math.PI * 2
+  });
+}
+
+/* ---------------- урон и смерть ---------------- */
+function damageMob(m, dmg, crit){
+  m.hp -= dmg;
+  m.el.classList.add('hit');
+  setTimeout(function(){ m.el.classList.remove('hit'); }, 180);
+  var bar = m.el.querySelector('.bar b');
+  if (bar) bar.style.width = Math.max(0, m.hp / m.maxHp * 100) + '%';
+  popText(m.x, m.y, (crit ? '✦' : '') + Math.round(dmg), crit ? 'gold' : '');
+  if (m.hp <= 0) killMob(m);
+}
+
+function killMob(m){
+  m.dead = true;
+  S.kills++;
+  S.coins += m.coin;
+  m.el.style.setProperty('--x', (m.x - 30) + 'px');
+  m.el.style.setProperty('--y', (m.y - 30) + 'px');
+  m.el.classList.add('dying');
+  setTimeout(function(){ if (m.el.parentNode) m.el.parentNode.removeChild(m.el); }, 360);
+  popText(m.x, m.y - 18, '+' + m.coin, 'gold');
+  updateHud();
+}
+
+function popText(x, y, txt, cls){
+  var d = document.createElement('div');
+  d.className = 'pop ' + (cls || '');
+  d.textContent = txt;
+  d.style.left = (x + (Math.random() * 16 - 8)) + 'px';
+  d.style.top = y + 'px';
+  field.appendChild(d);
+  setTimeout(function(){ if (d.parentNode) d.parentNode.removeChild(d); }, 900);
+}
+
+/* ---------------- выстрелы ---------------- */
+function shootAt(m){
+  var ang = Math.atan2(m.y - (CY - 30), m.x - CX);
+  var hx = CX, hy = CY - 30;
+  var sx = hx + Math.cos(ang) * 22, sy = hy + Math.sin(ang) * 18;
+  var el = document.createElement('div');
+  el.className = 'shot';
+  el.innerHTML = ART.shot;
+  field.appendChild(el);
+  SHOTS.push({ el: el, x: sx, y: sy, target: m, speed: 620 });
+  // герой поворачивается к цели
+  var tilt = Math.cos(ang) * 12;
+  heroEl.style.transform = 'translate(-50%,-50%) rotate(' + tilt + 'deg) scale(1.06)';
+  setTimeout(function(){ heroEl.style.transform = 'translate(-50%,-50%)'; }, 130);
+}
+
+/* ---------------- цикл ---------------- */
+function step(now){
+  if (!S.running) return;
+  var dt = Math.min(0.05, (now - lastT) / 1000 || 0.016);
+  lastT = now;
+
+  /* спавн из очереди */
+  if (spawnQueue.length){
+    spawnTimer -= dt;
+    if (spawnTimer <= 0){
+      spawnEnemy(spawnQueue.shift());
+      spawnTimer = Math.max(0.32, 1.15 - S.wave * 0.03);
+    }
+  }
+
+  /* герой стреляет */
+  shootTimer -= dt;
+  if (shootTimer <= 0){
+    var target = null, bestD = 1e9;
+    var range = Math.min(W, H) * 0.5;
+    MOBS.forEach(function(m){
+      if (m.dead) return;
+      var d = Math.hypot(m.x - CX, m.y - CY);
+      if (d > range) return;
+      if (d < bestD){ bestD = d; target = m; }
+    });
+    if (target){
+      var crit = Math.random() < S.critC;
+      var dmg = S.dmg * (crit ? S.critM : 1);
+      shootAt(target);
+      (function(mm, dd, cc){ setTimeout(function(){ if (!mm.dead) damageMob(mm, dd, cc); }, 120); })(target, dmg, crit);
+      shootTimer = 1 / S.rate;
+    } else {
+      shootTimer = 0.25;
+    }
+  }
+
+  /* враги идут к норе */
+  MOBS.forEach(function(m){
+    if (m.dead) return;
+    var dx = CX - m.x, dy = (CY + 6) - m.y;
+    var dist = Math.hypot(dx, dy);
+    if (dist > BURROW_R){
+      m.x += dx / dist * m.speed * dt;
+      m.y += dy / dist * m.speed * dt;
+    } else {
+      m.attackCd -= dt;
+      if (m.attackCd <= 0){
+        m.attackCd = 1.05;
+        S.hp -= m.dmg;
+        field.classList.add('shake');
+        setTimeout(function(){ field.classList.remove('shake'); }, 320);
+        if (S.hp <= 0){ gameOver(); }
+        updateHud();
+      }
+    }
+    var bob = Math.sin(now / 220 + m.phase) * 2.4;
+    m.el.style.transform = 'translate(' + (m.x - m.el.offsetWidth / 2) + 'px,' + (m.y - m.el.offsetHeight / 2 + bob) + 'px)';
+  });
+
+  /* пули летят к цели */
+  SHOTS = SHOTS.filter(function(s){
+    if (s.target.dead){ if (s.el.parentNode) s.el.parentNode.removeChild(s.el); return false; }
+    var dx = s.target.x - s.x, dy = s.target.y - s.y;
+    var d = Math.hypot(dx, dy);
+    if (d < 14){ if (s.el.parentNode) s.el.parentNode.removeChild(s.el); return false; }
+    s.x += dx / d * s.speed * dt;
+    s.y += dy / d * s.speed * dt;
+    s.el.style.transform = 'translate(' + (s.x - 8) + 'px,' + (s.y - 8) + 'px)';
+    return true;
+  });
+
+  /* между волнами */
+  if (S.waveActive && !spawnQueue.length && !MOBS.some(function(m){ return !m.dead; })){
+    S.waveActive = false;
+    S.coins += 8 + S.wave * 3;
+    S.betweenTimer = 2.6;
+    toast('Волна ' + S.wave + ' отбита', '+' + (8 + S.wave * 3) + ' жуков');
+    updateHud();
+  }
+  if (!S.waveActive){
+    S.betweenTimer -= dt;
+    if (S.betweenTimer <= 0 && !S.over) startWave(S.wave + 1);
+  }
+}
+
+function loop(now){
+  if (!S.running) return;
+  try{ step(now); }
+  catch(e){ window.__GAME_ERR = e.message + ' | ' + ((e.stack || '').split('\n')[1] || ''); }
+  requestAnimationFrame(loop);
+}
+
+/* ---------------- HUD ---------------- */
+function updateHud(){
+  $('coins').textContent = S.coins;
+  $('waveT').textContent = 'Волна ' + Math.max(1, S.wave);
+  $('hpView').textContent = Math.max(0, S.hp);
+  var alive = MOBS.filter(function(m){ return !m.dead; }).length + spawnQueue.length;
+  $('mobLeft').textContent = alive;
+  $('vDmg').textContent = Math.round(S.dmg);
+  $('vRate').textContent = S.rate.toFixed(2);
+  $('vCritC').textContent = Math.round(S.critC * 100) + '%';
+  $('vCritM').textContent = 'x' + S.critM.toFixed(1);
+  $('getSum').textContent = '+' + (25 + S.wave * 6);
+
+  costOf('dmg', COST.dmg, 'upDmg');
+  costOf('rate', COST.rate, 'upRate');
+  costOf('critC', COST.critC, 'upCritC');
+  costOf('critM', COST.critM, 'upCritM');
+
+  // сердца
+  var hp = burrowEl.querySelector('.hp');
+  if (hp){
+    var html = '';
+    for (var i = 0; i < S.maxHp; i++){
+      html += '<i class="' + (i < S.hp ? '' : 'lost') + '">' + ART.heart + '</i>';
+    }
+    hp.innerHTML = html;
+  }
+}
+function priceOf(base, lvl){ return Math.round(base * Math.pow(1.38, lvl)); }
+function costOf(key, base, btnId){
+  var p = priceOf(base, S.lvl[key]);
+  var btn = $(btnId);
+  btn.querySelector('span').textContent = p;
+  btn.disabled = S.coins < p;
+}
+
+/* ---------------- покупки ---------------- */
+function buy(key){
+  var base = COST[key], price = priceOf(base, S.lvl[key]);
+  if (S.coins < price) return;
+  S.coins -= price;
+  S.lvl[key]++;
+  if (key === 'dmg') S.dmg += 4 + S.lvl.dmg;
+  if (key === 'rate') S.rate = Math.min(6, S.rate + 0.14);
+  if (key === 'critC') S.critC = Math.min(0.6, S.critC + 0.015);
+  if (key === 'critM') S.critM = Math.min(6, S.critM + 0.12);
+  updateHud();
+}
+$('upDmg').onclick = function(){ buy('dmg'); };
+$('upRate').onclick = function(){ buy('rate'); };
+$('upCritC').onclick = function(){ buy('critC'); };
+$('upCritM').onclick = function(){ buy('critM'); };
+
+$('getBtn').onclick = function(){
+  var sum = 25 + S.wave * 6;
+  S.coins += sum;
+  toast('Награда', '+' + sum + ' жуков');
+  updateHud();
+};
+
+$('nextBtn').onclick = function(){
+  if (!S.running || S.over) return;
+  if (!S.waveActive && S.betweenTimer > 0.4){
+    S.betweenTimer = 0;
+  }
+};
+
+/* ---------------- старт/финиш ---------------- */
+function reset(){
+  MOBS.forEach(function(m){ if (m.el.parentNode) m.el.parentNode.removeChild(m.el); });
+  SHOTS.forEach(function(s){ if (s.el.parentNode) s.el.parentNode.removeChild(s.el); });
+  MOBS = []; SHOTS = []; spawnQueue = [];
+  S.running = true; S.over = false;
+  S.coins = 40; S.kills = 0; S.wave = 0; S.hp = 5; S.maxHp = 5;
+  S.dmg = 16; S.rate = 1.3; S.critC = 0.03; S.critM = 1.2;
+  S.lvl = { dmg: 0, rate: 0, critC: 0, critM: 0 };
+  S.waveActive = false; S.betweenTimer = 1.4;
+  shootTimer = 0; lastT = performance.now();
+  updateHud();
+  requestAnimationFrame(loop);
+}
+
+function gameOver(){
+  S.over = true; S.running = false;
+  $('endWave').textContent = S.wave;
+  $('endKills').textContent = S.kills;
+  $('endCoins').textContent = S.coins;
+  $('overScreen').classList.remove('hidden');
+}
+
+function toast(t, n){
+  $('toastT').textContent = t;
+  $('toastN').textContent = n;
+  var el = $('toast');
+  el.classList.add('on');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ el.classList.remove('on'); }, 1800);
+}
+
+/* ---------------- инициализация ---------------- */
+burrowEl.innerHTML = ART.burrow + '<div class="hp"></div>';
+heroEl.innerHTML = ART.hero;
+resize();
+buildProps();
+updateHud();
+addEventListener('resize', resize);
+
+$('startBtn').onclick = function(){
+  $('startScreen').classList.add('hidden');
+  reset();
+};
+$('againBtn').onclick = function(){
+  $('overScreen').classList.add('hidden');
+  reset();
+};
+
+window.__GAME = {
+  state: function(){ return { wave: S.wave, coins: S.coins, hp: S.hp, kills: S.kills, mobs: MOBS.filter(function(m){ return !m.dead; }).length, running: S.running }; },
+  addCoins: function(n){ S.coins += n; updateHud(); },
+  start: function(){ $('startScreen').classList.add('hidden'); reset(); },
+  wave: function(n){ startWave(n); }
+};
+</script>
+</body>
+</html>
