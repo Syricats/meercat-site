@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Игры сурикатов — meercat.ru</title>
-<meta name="description" content="Две маленькие игры про сурикатов: часовой, который уворачивается от опасностей, и пары по фотографиям.">
+<meta name="description" content="Восемь маленьких игр про сурикатов: часовой, пары, жуки, бегун, норы, момент, викторина и тень.">
 <meta name="theme-color" content="#f7f1e6">
 <link rel="icon" href="img/favicon.png">
 <style>
   :root{
     --sand:#f7f1e6; --sand2:#efe4d0; --ink:#241c13; --ink2:#5b4c3a; --dim:#8a7761;
     --line:rgba(90,70,40,.16); --accent:#d98324; --accent2:#b8541f; --green:#7a8b3a;
-    --card:#fffdf8;
+    --card:#fffdf8; --bad:#b23b2e;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{
@@ -34,33 +34,37 @@
     border:1px solid var(--line);background:var(--card);padding:9px 14px;border-radius:999px}
   h1{font-size:30px;line-height:1.2;margin:26px 0 6px;letter-spacing:-.4px}
   h1 span{color:var(--accent2)}
-  .lead{color:var(--ink2);font-size:16px;max-width:620px}
-  .tabs{display:flex;gap:10px;margin:20px 0 14px;flex-wrap:wrap}
-  .tab{background:var(--card);border:1px solid var(--line);color:var(--ink2);font-weight:700;
-    font-size:15px;padding:11px 18px;border-radius:14px;cursor:pointer}
+  .lead{color:var(--ink2);font-size:16px;max-width:640px}
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 14px}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;background:var(--card);border:1px solid var(--line);color:var(--ink2);font-weight:700;
+    font-size:14.5px;padding:10px 16px;border-radius:14px;cursor:pointer;white-space:nowrap}
   .tab.on{background:var(--ink);color:var(--sand);border-color:var(--ink)}
   .panel{display:none}
   .panel.on{display:block}
   .board{position:relative;background:var(--card);border:1px solid var(--line);border-radius:20px;
     overflow:hidden;box-shadow:0 18px 40px rgba(90,70,40,.10)}
-  #sky{display:block;width:100%;height:430px;touch-action:none;background:
-    linear-gradient(180deg,#f9efdc,#efe0c6 62%,#e2cda6)}
-  .hud{position:absolute;inset:10px 12px auto 12px;display:flex;gap:10px;align-items:center;
-    font-size:14px;font-weight:800;color:var(--ink);pointer-events:none}
-  .hud .pill{background:rgba(255,253,248,.86);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
-  .hud .lives{margin-left:auto;letter-spacing:2px}
+  .board canvas{display:block;width:100%;height:400px;touch-action:none;
+    background:linear-gradient(180deg,#f9efdc,#efe0c6 62%,#e2cda6)}
+  .hud{position:absolute;inset:10px 12px auto 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+    font-size:13.5px;font-weight:800;color:var(--ink);pointer-events:none}
+  .hud .pill{background:rgba(255,253,248,.88);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+  .hud .lives{margin-left:auto;letter-spacing:2px;background:rgba(255,253,248,.88);
+    border:1px solid var(--line);border-radius:999px;padding:5px 11px}
   .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
-    justify-content:center;gap:12px;text-align:center;padding:20px;background:rgba(36,28,19,.72);color:var(--sand)}
+    justify-content:center;gap:12px;text-align:center;padding:22px;background:rgba(36,28,19,.74);color:var(--sand)}
   .overlay.hide{display:none}
-  .overlay h2{font-size:22px}
-  .overlay p{font-size:15px;opacity:.9;max-width:340px}
-  .btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:14px;padding:14px 24px;
-    font-size:16px;font-weight:800;cursor:pointer;background:var(--ink);color:var(--sand)}
+  .overlay h2{font-size:21px}
+  .overlay p{font-size:15px;opacity:.92;max-width:360px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:14px;
+    padding:13px 22px;font-size:15.5px;font-weight:800;cursor:pointer;background:var(--ink);color:var(--sand)}
   .btn.line{background:transparent;color:var(--ink);border:1px solid var(--line)}
   .btn:active{transform:translateY(1px)}
   .overlay .btn{background:var(--accent);color:#fff}
-  .hint{color:var(--dim);font-size:14px;margin-top:10px}
-  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}
+  .hint{color:var(--dim);font-size:13.5px;margin-top:10px}
+
+  /* пары */
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:4px}
   .mcard{position:relative;aspect-ratio:1/1;border-radius:14px;border:1px solid var(--line);
     background:var(--sand2);cursor:pointer;overflow:hidden;padding:0;perspective:600px}
   .mcard .inner{position:absolute;inset:0;transition:transform .35s ease;transform-style:preserve-3d}
@@ -70,21 +74,41 @@
   .mcard .back img{width:46%;height:46%;object-fit:contain;opacity:.2}
   .mcard .front{transform:rotateY(180deg);background:#000}
   .mcard .front img{width:100%;height:100%;object-fit:cover;display:block}
-  .mcard.done .front::after{content:"✓";position:absolute;right:8px;bottom:6px;font-size:18px;color:#fff;
-    text-shadow:0 2px 6px rgba(0,0,0,.6)}
-  .mcard.done{cursor:default;box-shadow:0 0 0 2px var(--green) inset}
-  .mstats{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
-  .mstats .pill{background:var(--card);border:1px solid var(--line);border-radius:999px;
-    padding:7px 13px;font-size:14px;font-weight:700;color:var(--ink2)}
-  .mwin{margin-top:12px;padding:14px 16px;border-radius:14px;background:rgba(122,139,58,.14);
+  .mcard.done{box-shadow:0 0 0 2px var(--green) inset;cursor:default}
+  .stats{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  .stats .pill{background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:7px 13px;font-size:13.5px;font-weight:700;color:var(--ink2)}
+  .mwin{margin-top:12px;padding:13px 15px;border-radius:14px;background:rgba(122,139,58,.14);
     border:1px solid rgba(122,139,58,.35);font-weight:700;display:none}
   .mwin.on{display:block}
+
+  /* норы */
+  .mgrid{display:grid;grid-template-columns:repeat(9,1fr);gap:3px;max-width:420px;margin:0 auto}
+  .cell{aspect-ratio:1/1;border-radius:7px;border:1px solid rgba(90,70,40,.25);background:#e9d6b4;
+    font-weight:800;font-size:14px;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .cell.open{background:#fbf5ea;cursor:default}
+  .cell.snake{background:var(--bad);color:#fff}
+  .cell.flag{background:#d98324;color:#fff}
+  .cell.n1{color:#2b6cb0}.cell.n2{color:#7a8b3a}.cell.n3{color:#b8541f}
+  .cell.n4{color:#8b3aa0}.cell.n5{color:#b23b2e}
+
+  /* викторина */
+  .qbox{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;
+    box-shadow:0 18px 40px rgba(90,70,40,.08)}
+  .qtext{font-size:18px;font-weight:800;margin-bottom:14px}
+  .qopt{display:block;width:100%;text-align:left;background:var(--sand);border:1px solid var(--line);
+    border-radius:14px;padding:13px 16px;font-size:15.5px;margin-bottom:9px;cursor:pointer;color:var(--ink)}
+  .qopt.right{background:rgba(122,139,58,.22);border-color:var(--green)}
+  .qopt.wrong{background:rgba(178,59,46,.16);border-color:var(--bad)}
+  .qopt:disabled{cursor:default}
   footer{margin:34px 0 30px;color:var(--dim);font-size:13.5px;display:flex;gap:14px;flex-wrap:wrap}
   footer a{text-decoration:none;border-bottom:1px dotted var(--dim)}
   @media (max-width:520px){
     h1{font-size:25px}
-    #sky{height:360px}
+    .board canvas{height:340px}
     .grid{gap:7px}
+    .mgrid{gap:2px}
+    .cell{font-size:12px;border-radius:5px}
   }
 </style>
 </head>
@@ -102,27 +126,33 @@
 
 <main class="wrap">
   <h1>Игры <span>сурикатов</span></h1>
-  <p class="lead">Две маленькие игры: часовой, который уворачивается от опасностей с неба, и пары по фотографиям.
-  Ничего не скачивается, счёт остаётся в твоём браузере.</p>
+  <p class="lead">Восемь маленьких игр: часовой, пары, жуки, бегун, норы, момент, викторина и тень.
+  Ничего не скачивается, рекорды остаются в твоём браузере.</p>
 
-  <div class="tabs">
+  <div class="tabs" id="tabs">
     <button class="tab on" data-panel="watch">Часовой</button>
     <button class="tab" data-panel="pairs">Пары</button>
+    <button class="tab" data-panel="bugs">Жуки</button>
+    <button class="tab" data-panel="run">Бегун</button>
+    <button class="tab" data-panel="mines">Норы</button>
+    <button class="tab" data-panel="moment">Момент</button>
+    <button class="tab" data-panel="quiz">Викторина</button>
+    <button class="tab" data-panel="shadow">Тень</button>
   </div>
 
   <!-- ЧАСОВОЙ -->
   <section class="panel on" id="panel-watch">
     <div class="board">
-      <canvas id="sky"></canvas>
+      <canvas id="cvWatch"></canvas>
       <div class="hud">
-        <span class="pill">Очки: <b id="score">0</b></span>
-        <span class="pill">Рекорд: <b id="best">0</b></span>
-        <span class="lives" id="lives">●●●</span>
+        <span class="pill">Очки: <b id="wScore">0</b></span>
+        <span class="pill">Рекорд: <b id="wBest">0</b></span>
+        <span class="lives" id="wLives">●●●</span>
       </div>
-      <div class="overlay" id="ov">
-        <h2 id="ovTitle">Часовой на посту</h2>
-        <p id="ovText">Держи палец на экране (или пробел) — сурикат пригнется. Отпустишь — снова встанет и будет смотреть вдаль.</p>
-        <button class="btn" id="ovBtn">Начать</button>
+      <div class="overlay" id="wOv">
+        <h2>Часовой на посту</h2>
+        <p>Держи палец на экране (или пробел) — сурикат пригнется. Отпустишь — снова встанет и будет смотреть вдаль.</p>
+        <button class="btn" id="wStart">Начать</button>
       </div>
     </div>
     <p class="hint">Опасности падают сверху. Пригнись в нужный момент — и сурикат останется целым.</p>
@@ -130,18 +160,117 @@
 
   <!-- ПАРЫ -->
   <section class="panel" id="panel-pairs">
-    <div class="grid" id="grid"></div>
-    <div class="mstats">
-      <span class="pill">Ходы: <b id="moves">0</b></span>
-      <span class="pill">Лучший результат: <b id="mbest">—</b></span>
-      <button class="btn line" id="mrestart" style="padding:9px 16px;font-size:14px">Заново</button>
+    <div class="grid" id="pGrid"></div>
+    <div class="stats">
+      <span class="pill">Ходы: <b id="pMoves">0</b></span>
+      <span class="pill">Лучший: <b id="pBest">—</b></span>
+      <button class="btn line" id="pRestart" style="padding:9px 16px;font-size:14px">Заново</button>
     </div>
-    <div class="mwin" id="mwin"></div>
+    <div class="mwin" id="pWin"></div>
+  </section>
+
+  <!-- ЖУКИ -->
+  <section class="panel" id="panel-bugs">
+    <div class="board">
+      <canvas id="cvBugs"></canvas>
+      <div class="hud">
+        <span class="pill">Поймано: <b id="bScore">0</b></span>
+        <span class="pill">Время: <b id="bTime">45</b></span>
+        <span class="lives" id="bLives">●●●</span>
+      </div>
+      <div class="overlay" id="bOv">
+        <h2>Голодный сурикат</h2>
+        <p>Веди пальцем по экрану — корзинка идёт за ним. Жуки дают очко, скорпионы отнимают жизнь.</p>
+        <button class="btn" id="bStart">Начать</button>
+      </div>
+    </div>
+    <p class="hint">45 секунд на охоту. Скорпиона лучше не ловить — он кусается.</p>
+  </section>
+
+  <!-- БЕГУН -->
+  <section class="panel" id="panel-run">
+    <div class="board">
+      <canvas id="cvRun"></canvas>
+      <div class="hud">
+        <span class="pill">Метры: <b id="rScore">0</b></span>
+        <span class="pill">Рекорд: <b id="rBest">0</b></span>
+      </div>
+      <div class="overlay" id="rOv">
+        <h2>Дорога домой</h2>
+        <p>Тап или пробел — прыжок. Камни и кактусы надо перепрыгивать, иначе охота закончится быстро.</p>
+        <button class="btn" id="rStart">Бежать</button>
+      </div>
+    </div>
+    <p class="hint">Чем дальше, тем быстрее. Рекорд в метрах сохраняется.</p>
+  </section>
+
+  <!-- НОРЫ -->
+  <section class="panel" id="panel-mines">
+    <div class="board" style="padding:16px">
+      <div class="mgrid" id="mGrid"></div>
+    </div>
+    <div class="stats">
+      <span class="pill">Открыто: <b id="nOpen">0</b>/71</span>
+      <span class="pill">Время: <b id="nTime">0</b> с</span>
+      <span class="pill">Флажков: <b id="nLeft">0</b></span>
+      <button class="btn line" id="nFlag" style="padding:9px 16px;font-size:14px">Флажок: выкл</button>
+      <button class="btn line" id="nRestart" style="padding:9px 16px;font-size:14px">Заново</button>
+    </div>
+    <p class="hint">Открывай норы и не наткнись на змею. Цифра — сколько змей в соседних норах. Долгое нажатие или режим «Флажок» ставит отметку.</p>
+  </section>
+
+  <!-- МОМЕНТ -->
+  <section class="panel" id="panel-moment">
+    <div class="board">
+      <canvas id="cvMoment"></canvas>
+      <div class="hud">
+        <span class="pill">Поймано: <b id="moScore">0</b></span>
+        <span class="pill">Время: <b id="moTime">30</b></span>
+        <span class="lives" id="moLives">●●●</span>
+      </div>
+      <div class="overlay" id="moOv">
+        <h2>Поймай момент</h2>
+        <p>Сурикат выскакивает из норы и снова прячется. Успей тапнуть, пока он наверху.</p>
+        <button class="btn" id="moStart">Начать</button>
+      </div>
+    </div>
+    <p class="hint">30 секунд. Пропустил три раза — смена закончилась.</p>
+  </section>
+
+  <!-- ВИКТОРИНА -->
+  <section class="panel" id="panel-quiz">
+    <div class="qbox">
+      <div class="qtext" id="qText">Загрузка…</div>
+      <div id="qOpts"></div>
+      <div class="stats">
+        <span class="pill">Верно: <b id="qScore">0</b></span>
+        <span class="pill">Вопрос: <b id="qNum">1</b>/12</span>
+      </div>
+    </div>
+    <p class="hint">Все ответы есть в двенадцати фактах на главной странице.</p>
+  </section>
+
+  <!-- ТЕНЬ -->
+  <section class="panel" id="panel-shadow">
+    <div class="board">
+      <canvas id="cvShadow"></canvas>
+      <div class="hud">
+        <span class="pill">Уклонений: <b id="sScore">0</b></span>
+        <span class="lives" id="sLives">●●●</span>
+      </div>
+      <div class="overlay" id="sOv">
+        <h2>Тень сверху</h2>
+        <p>Веди суриката пальцем влево-вправо: тень падает туда, где отмечен крестик. Уведи его в сторону.</p>
+        <button class="btn" id="sStart">Начать</button>
+      </div>
+    </div>
+    <p class="hint">Чем дальше, тем быстрее падает тень и шире её пятно.</p>
   </section>
 
   <footer>
     <span>© 2026 meercat.ru</span>
     <a href="index.html">На главную</a>
+    <a href="index.html#facts">Факты</a>
     <a href="index.html#thanks">Угостить суриката</a>
   </footer>
 </main>
@@ -158,282 +287,695 @@
 <noscript><div><img src="https://mc.yandex.ru/watch/113958257" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 
 <script>
-/* ============ переключение вкладок ============ */
-document.querySelectorAll('.tab').forEach(function(t){
-  t.onclick = function(){
-    document.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('on', x === t); });
-    document.querySelectorAll('.panel').forEach(function(p){
-      p.classList.toggle('on', p.id === 'panel-' + t.dataset.panel);
-    });
-    if (t.dataset.panel === 'watch') requestAnimationFrame(resizeCanvas);
+/* ======================= общее ======================= */
+var $ = function(id){ return document.getElementById(id); };
+function ls(key, val){
+  if (val === undefined) return +(localStorage.getItem(key) || 0);
+  localStorage.setItem(key, String(val));
+  return val;
+}
+function shuffle(a){
+  for (var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function setupCanvas(cv){
+  var o = { cv: cv, ctx: cv.getContext('2d'), W: 320, H: 400, DPR: 1 };
+  o.resize = function(){
+    var r = cv.getBoundingClientRect();
+    if (!r.width) return;
+    o.DPR = Math.min(2, window.devicePixelRatio || 1);
+    o.W = r.width; o.H = r.height;
+    cv.width = Math.round(o.W * o.DPR);
+    cv.height = Math.round(o.H * o.DPR);
+    o.ctx.setTransform(o.DPR, 0, 0, o.DPR, 0, 0);
   };
-});
-
-/* ============ игра 1: Часовой ============ */
-var cv = document.getElementById('sky');
-var ctx = cv.getContext('2d');
-var W = 320, H = 430, DPR = 1;
-
-function resizeCanvas(){
-  var r = cv.getBoundingClientRect();
-  if (!r.width) return;
-  DPR = Math.min(2, window.devicePixelRatio || 1);
-  W = r.width; H = r.height;
-  cv.width = Math.round(W * DPR);
-  cv.height = Math.round(H * DPR);
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  o.resize();
+  window.addEventListener('resize', o.resize);
+  return o;
 }
-window.addEventListener('resize', function(){ resizeCanvas(); });
-resizeCanvas();
-
-var G = {
-  running: false, over: false,
-  duck: 0, score: 0, lives: 3,
-  hazards: [], t: 0, next: 1200, pops: [],
-  best: +(localStorage.getItem('mrk_watch_best') || 0)
-};
-document.getElementById('best').textContent = G.best;
-
-function ground(){ return H - 46; }
-function cx(){ return W / 2; }
-
-function spawn(){
-  var spread = Math.min(150, W * 0.34);
-  G.hazards.push({
-    x: cx() + (Math.random() * 2 - 1) * spread,
-    y: -30,
-    vy: Math.min(430, 165 + G.score * 4 + Math.random() * 35),
-    k: Math.random() < 0.5 ? 0 : 1
-  });
-}
-
-function drawMeerkat(x, gy, duck){
-  var s = 1.28, dy = 0;
-  if (duck) { s = 0.78; dy = 30; }
+function drawMeerkat(ctx, x, gy, scale, duck){
+  var s = scale || 1, dy = 0;
+  if (duck){ s *= 0.8; dy = 22 * scale; }
   ctx.save();
   ctx.translate(x, gy + dy);
-  // нора
-  ctx.fillStyle = 'rgba(120,92,54,.35)';
-  ctx.beginPath(); ctx.ellipse(0, 4, 30, 7, 0, 0, Math.PI * 2); ctx.fill();
-  // тело
+  ctx.fillStyle = 'rgba(120,92,54,.32)';
+  ctx.beginPath(); ctx.ellipse(0, 3, 26 * s, 6 * s, 0, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#c99b62';
   ctx.beginPath(); ctx.ellipse(0, -26 * s, 15 * s, 28 * s, 0, 0, Math.PI * 2); ctx.fill();
-  // живот
   ctx.fillStyle = '#f0dcc0';
   ctx.beginPath(); ctx.ellipse(0, -22 * s, 8 * s, 19 * s, 0, 0, Math.PI * 2); ctx.fill();
-  // голова
   ctx.fillStyle = '#c99b62';
   ctx.beginPath(); ctx.arc(0, -58 * s, 12 * s, 0, Math.PI * 2); ctx.fill();
-  // ушки
   ctx.beginPath(); ctx.arc(-10 * s, -66 * s, 4 * s, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(10 * s, -66 * s, 4 * s, 0, Math.PI * 2); ctx.fill();
-  // морда
   ctx.fillStyle = '#f0dcc0';
   ctx.beginPath(); ctx.ellipse(0, -54 * s, 7 * s, 6 * s, 0, 0, Math.PI * 2); ctx.fill();
-  // глаза
   ctx.fillStyle = '#241c13';
   ctx.beginPath(); ctx.arc(-4.5 * s, -60 * s, 1.9 * s, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(4.5 * s, -60 * s, 1.9 * s, 0, Math.PI * 2); ctx.fill();
-  // нос
   ctx.beginPath(); ctx.arc(0, -55 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 }
-
-function drawHazard(h){
-  ctx.save();
-  ctx.translate(h.x, h.y);
-  if (h.k === 0){
-    // птица-тень
-    ctx.fillStyle = 'rgba(36,28,19,.82)';
-    ctx.beginPath();
-    ctx.moveTo(-18, 0); ctx.quadraticCurveTo(-7, -10, 0, -2);
-    ctx.quadraticCurveTo(7, -10, 18, 0); ctx.quadraticCurveTo(7, -3, 0, 4);
-    ctx.quadraticCurveTo(-7, -3, -18, 0); ctx.fill();
-  } else {
-    // камень
-    ctx.fillStyle = 'rgba(120,92,54,.9)';
-    ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,.25)';
-    ctx.beginPath(); ctx.arc(-3, -3, 3, 0, Math.PI * 2); ctx.fill();
-  }
-  ctx.restore();
-}
-
-function hud(){
-  document.getElementById('score').textContent = G.score;
-  document.getElementById('lives').textContent = '●●●'.slice(0, Math.max(0, G.lives)) || '—';
-}
-
-function start(){
-  G.running = true; G.over = false; G.duck = 0;
-  G.score = 0; G.lives = 3; G.hazards = []; G.t = 0; G.next = 1200; G.pops = [];
-  document.getElementById('ov').classList.add('hide');
-  hud();
-}
-
-function gameOver(){
-  G.running = false; G.over = true;
-  if (G.score > G.best){
-    G.best = G.score;
-    localStorage.setItem('mrk_watch_best', String(G.best));
-    document.getElementById('best').textContent = G.best;
-  }
-  document.getElementById('ovTitle').textContent = 'Часовой устал';
-  document.getElementById('ovText').textContent = 'Очки: ' + G.score + '. Рекорд: ' + G.best + '. Ещё разок?';
-  document.getElementById('ovBtn').textContent = 'Ещё раз';
-  document.getElementById('ov').classList.remove('hide');
-}
-
-var last = 0;
-function loop(now){
-  var dt = Math.min(0.05, (last ? (now - last) : 16) / 1000);
-  last = now;
-
-  ctx.clearRect(0, 0, W, H);
-
-  // земля и даль
+function drawGround(ctx, W, H){
   ctx.fillStyle = '#e2cda6';
-  ctx.fillRect(0, ground() - 6, W, H - ground() + 6);
+  ctx.fillRect(0, H - 44, W, 44);
   ctx.fillStyle = 'rgba(120,92,54,.18)';
-  ctx.fillRect(0, ground() - 6, W, 3);
+  ctx.fillRect(0, H - 46, W, 3);
+}
 
-  if (G.running){
-    G.t += dt;
-    G.next -= dt * 1000;
-    if (G.next <= 0){
-      spawn();
-      G.next = Math.max(380, 900 - G.score * 12);
+/* ======================= вкладки ======================= */
+var RESIZERS = {
+  watch: function(){ if (window.WATCH) WATCH.resize(); },
+  bugs: function(){ if (window.BUGS) BUGS.resize(); },
+  run: function(){ if (window.RUN) RUN.resize(); },
+  moment: function(){ if (window.MOMENT) MOMENT.resize(); },
+  shadow: function(){ if (window.SHADOW) SHADOW.resize(); }
+};
+document.querySelectorAll('.tab').forEach(function(t){
+  t.onclick = function(){
+    document.querySelectorAll('.tab').forEach(function(x){ x.classList.toggle('on', x === t); });
+    document.querySelectorAll('.panel').forEach(function(p){ p.classList.toggle('on', p.id === 'panel-' + t.dataset.panel); });
+    requestAnimationFrame(function(){ if (RESIZERS[t.dataset.panel]) RESIZERS[t.dataset.panel](); });
+  };
+});
+
+/* ======================= 1. Часовой ======================= */
+window.WATCH = (function(){
+  var C = setupCanvas($('cvWatch')), ctx = C.ctx;
+  var G = { running:false, over:false, duck:0, score:0, lives:3, hazards:[], next:1200, pops:[] };
+  var best = ls('mrk_watch_best');
+  $('wBest').textContent = best;
+
+  function hud(){
+    $('wScore').textContent = G.score;
+    $('wLives').textContent = G.lives > 0 ? '●●●'.slice(0, G.lives) : '—';
+  }
+  function gy(){ return C.H - 46; }
+  function start(){
+    G.running = true; G.over = false; G.duck = 0; G.score = 0; G.lives = 3;
+    G.hazards = []; G.next = 1200; G.pops = [];
+    $('wOv').classList.add('hide'); hud();
+  }
+  function over(){
+    G.running = false; G.over = true;
+    if (G.score > best){ best = G.score; ls('mrk_watch_best', best); $('wBest').textContent = best; }
+    $('wOv').querySelector('h2').textContent = 'Часовой устал';
+    $('wOv').querySelector('p').textContent = 'Очки: ' + G.score + '. Рекорд: ' + best + '. Ещё разок?';
+    $('wStart').textContent = 'Ещё раз';
+    $('wOv').classList.remove('hide');
+  }
+  var last = 0;
+  function loop(now){
+    var dt = Math.min(0.05, (last ? now - last : 16) / 1000); last = now;
+    var W = C.W, H = C.H;
+    ctx.clearRect(0, 0, W, H); drawGround(ctx, W, H);
+
+    if (G.running){
+      G.next -= dt * 1000;
+      if (G.next <= 0){
+        var spread = Math.min(150, W * 0.34);
+        G.hazards.push({ x: W / 2 + (Math.random() * 2 - 1) * spread, y: -30,
+          vy: Math.min(430, 165 + G.score * 4 + Math.random() * 35), k: Math.random() < 0.5 ? 0 : 1 });
+        G.next = Math.max(380, 900 - G.score * 12);
+      }
+      for (var i = G.hazards.length - 1; i >= 0; i--){
+        var h = G.hazards[i];
+        h.y += h.vy * dt;
+        if (h.y >= gy() - 24){
+          if (G.duck > 0){ G.score++; G.pops.push({ x: h.x, y: gy() - 30, t: 0.9 }); }
+          else if (--G.lives <= 0){ G.hazards.splice(i, 1); hud(); over(); break; }
+          G.hazards.splice(i, 1); hud();
+        }
+      }
+      if (G.duck > 0) G.duck = Math.max(0, G.duck - dt);
     }
 
-    for (var i = G.hazards.length - 1; i >= 0; i--){
-      var h = G.hazards[i];
-      h.y += h.vy * dt;
-      if (h.y >= ground() - 24){
-        // момент истины
-        if (G.duck > 0){ G.score++; G.pops.push({x: h.x, y: ground() - 30, t: 0.9}); }
-        else {
-          G.lives--;
-          if (G.lives <= 0){ G.hazards.splice(i, 1); gameOver(); hud(); break; }
+    G.hazards.forEach(function(h){
+      ctx.save(); ctx.translate(h.x, h.y);
+      if (h.k === 0){
+        ctx.fillStyle = 'rgba(36,28,19,.82)';
+        ctx.beginPath();
+        ctx.moveTo(-18, 0); ctx.quadraticCurveTo(-7, -10, 0, -2);
+        ctx.quadraticCurveTo(7, -10, 18, 0); ctx.quadraticCurveTo(7, -3, 0, 4);
+        ctx.quadraticCurveTo(-7, -3, -18, 0); ctx.fill();
+      } else {
+        ctx.fillStyle = 'rgba(120,92,54,.9)';
+        ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    });
+
+    for (var j = G.pops.length - 1; j >= 0; j--){
+      var p = G.pops[j]; p.t -= dt; p.y -= 26 * dt;
+      if (p.t <= 0){ G.pops.splice(j, 1); continue; }
+      ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, p.t));
+      ctx.fillStyle = '#7a8b3a'; ctx.font = '700 16px -apple-system,Segoe UI,Roboto,sans-serif';
+      ctx.textAlign = 'center'; ctx.fillText('+1', p.x, p.y); ctx.restore();
+    }
+
+    drawMeerkat(ctx, W / 2, gy(), 1.28, G.duck > 0);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  function press(){ if (G.running) G.duck = 0.3; }
+  C.cv.addEventListener('pointerdown', function(e){ e.preventDefault(); press(); });
+  window.addEventListener('keydown', function(e){ if (e.code === 'Space'){ e.preventDefault(); press(); } });
+  $('wStart').onclick = start;
+  return { resize: C.resize, state: G, press: press, start: start };
+})();
+
+/* ======================= 2. Пары ======================= */
+(function(){
+  var PHOTOS = [1,2,3,4,5,6,7,8].map(function(i){ return 'img/meerkats/m' + i + '.webp'; });
+  var grid = $('pGrid'), first = null, lock = false, moves = 0, matched = 0;
+  function best(v){
+    var cur = localStorage.getItem('mrk_pairs_best');
+    if (v == null) return cur;
+    if (!cur || v < +cur){ localStorage.setItem('mrk_pairs_best', String(v)); return String(v); }
+    return cur;
+  }
+  $('pBest').textContent = best() ? best() + ' ходов' : '—';
+
+  function newGame(){
+    grid.innerHTML = ''; first = null; lock = false; moves = 0; matched = 0;
+    $('pMoves').textContent = '0'; $('pWin').classList.remove('on');
+    shuffle(PHOTOS.concat(PHOTOS)).forEach(function(src){
+      var b = document.createElement('button');
+      b.className = 'mcard';
+      b.innerHTML = '<span class="inner"><span class="side back"><img src="img/meerkat.webp" alt=""></span>' +
+        '<span class="side front"><img src="' + src + '" alt="" loading="lazy"></span></span>';
+      b.dataset.src = src;
+      b.onclick = function(){ flip(b); };
+      grid.appendChild(b);
+    });
+  }
+  function flip(card){
+    if (lock || card.classList.contains('flip') || card.classList.contains('done')) return;
+    card.classList.add('flip');
+    if (!first){ first = card; return; }
+    moves++; $('pMoves').textContent = moves;
+    if (first.dataset.src === card.dataset.src){
+      first.classList.add('done'); card.classList.add('done');
+      first = null; matched += 2;
+      if (matched === 16){
+        var b2 = best(moves);
+        $('pWin').textContent = 'Все пары найдены за ' + moves + ' ходов. Лучший результат: ' + b2 + '.';
+        $('pWin').classList.add('on');
+        $('pBest').textContent = b2 + ' ходов';
+      }
+      return;
+    }
+    var a = first; first = null; lock = true;
+    setTimeout(function(){ a.classList.remove('flip'); card.classList.remove('flip'); lock = false; }, 750);
+  }
+  $('pRestart').onclick = newGame;
+  newGame();
+})();
+
+/* ======================= 3. Жуки ======================= */
+window.BUGS = (function(){
+  var C = setupCanvas($('cvBugs')), ctx = C.ctx;
+  var G = { running:false, score:0, lives:3, items:[], bx:0, next:600, time:45 };
+  var best = ls('mrk_bugs_best');
+
+  function hud(){
+    $('bScore').textContent = G.score;
+    $('bTime').textContent = Math.max(0, Math.ceil(G.time));
+    $('bLives').textContent = G.lives > 0 ? '●●●'.slice(0, G.lives) : '—';
+  }
+  function start(){
+    G.running = true; G.score = 0; G.lives = 3; G.items = []; G.next = 500; G.time = 45;
+    G.bx = C.W / 2; $('bOv').classList.add('hide'); hud();
+  }
+  function over(){
+    G.running = false;
+    if (G.score > best){ best = G.score; ls('mrk_bugs_best', best); }
+    $('bOv').querySelector('h2').textContent = 'Охота закончена';
+    $('bOv').querySelector('p').textContent = 'Поймано жуков: ' + G.score + '. Рекорд: ' + best + '.';
+    $('bStart').textContent = 'Ещё раз';
+    $('bOv').classList.remove('hide');
+  }
+  var last = 0;
+  function loop(now){
+    var dt = Math.min(0.05, (last ? now - last : 16) / 1000); last = now;
+    var W = C.W, H = C.H;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#e2cda6'; ctx.fillRect(0, H - 40, W, 40);
+
+    if (G.running){
+      G.time -= dt;
+      if (G.time <= 0) over();
+
+      G.next -= dt * 1000;
+      if (G.next <= 0){
+        G.items.push({ x: 20 + Math.random() * (W - 40), y: -20,
+          vy: 95 + Math.random() * 70 + G.score * 1.5, kind: Math.random() < 0.28 ? 'scorp' : 'bug' });
+        G.next = Math.max(240, 620 - G.score * 6);
+      }
+
+      for (var i = G.items.length - 1; i >= 0; i--){
+        var it = G.items[i];
+        it.y += it.vy * dt;
+        if (it.y > H - 70){
+          if (Math.abs(it.x - G.bx) < 46){
+            if (it.kind === 'bug'){ G.score++; }
+            else if (--G.lives <= 0){ G.items.splice(i, 1); hud(); over(); break; }
+          }
+          G.items.splice(i, 1); hud();
         }
-        G.hazards.splice(i, 1);
-        hud();
-        continue;
       }
     }
+
+    ctx.fillStyle = '#8a6a3c';
+    ctx.beginPath(); ctx.moveTo(G.bx - 34, H - 54); ctx.lineTo(G.bx + 34, H - 54);
+    ctx.lineTo(G.bx + 26, H - 30); ctx.lineTo(G.bx - 26, H - 30); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(36,28,19,.55)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(G.bx, H - 54, 34, Math.PI, 0); ctx.stroke();
+
+    G.items.forEach(function(it){
+      ctx.save(); ctx.translate(it.x, it.y);
+      if (it.kind === 'bug'){
+        ctx.fillStyle = '#3b2f22';
+        ctx.beginPath(); ctx.ellipse(0, 0, 8, 6, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#3b2f22'; ctx.lineWidth = 2;
+        for (var k = -1; k <= 1; k += 2){
+          ctx.beginPath(); ctx.moveTo(k * 5, -3); ctx.lineTo(k * 11, -7); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(k * 5, 3); ctx.lineTo(k * 11, 7); ctx.stroke();
+        }
+      } else {
+        ctx.fillStyle = '#b8541f';
+        ctx.beginPath(); ctx.ellipse(0, 0, 9, 6, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#b8541f'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(7, -2); ctx.quadraticCurveTo(15, -10, 9, -14); ctx.stroke();
+      }
+      ctx.restore();
+    });
+
+    requestAnimationFrame(loop);
   }
-
-  G.hazards.forEach(drawHazard);
-
-  // «+1» за уклонение
-  for (var j = G.pops.length - 1; j >= 0; j--){
-    var pop = G.pops[j];
-    pop.t -= dt; pop.y -= 26 * dt;
-    if (pop.t <= 0){ G.pops.splice(j, 1); continue; }
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, Math.min(1, pop.t));
-    ctx.fillStyle = '#7a8b3a';
-    ctx.font = '700 16px -apple-system,Segoe UI,Roboto,sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('+1', pop.x, pop.y);
-    ctx.restore();
-  }
-
-  drawMeerkat(cx(), ground(), G.duck > 0);
   requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
 
-function press(){ if (G.running) G.duck = 0.3; }
-function release(){ G.duck = 0; }
-
-cv.addEventListener('pointerdown', function(e){ e.preventDefault(); press(); });
-cv.addEventListener('pointerup', release);
-cv.addEventListener('pointercancel', release);
-cv.addEventListener('pointerleave', release);
-window.addEventListener('keydown', function(e){
-  if (e.code === 'Space' || e.code === 'ArrowDown'){ e.preventDefault(); press(); }
-});
-window.addEventListener('keyup', function(e){
-  if (e.code === 'Space' || e.code === 'ArrowDown') release();
-});
-document.getElementById('ovBtn').onclick = start;
-
-// «пригнуться» на 0.22 с, даже если палец сразу отпустили
-setInterval(function(){ if (G.duck > 0) G.duck = Math.max(0, G.duck - 0.05); }, 50);
-
-/* ============ игра 2: Пары ============ */
-var PHOTOS = [1,2,3,4,5,6,7,8].map(function(i){ return 'img/meerkats/m' + i + '.webp'; });
-var grid = document.getElementById('grid');
-var first = null, lock = false, moves = 0, matched = 0;
-var MBEST_KEY = 'mrk_pairs_best';
-
-function mbest(v){
-  var cur = localStorage.getItem(MBEST_KEY);
-  if (v == null) return cur;
-  if (!cur || v < +cur){ localStorage.setItem(MBEST_KEY, String(v)); return String(v); }
-  return cur;
-}
-document.getElementById('mbest').textContent = mbest() ? mbest() + ' ходов' : '—';
-
-function shuffle(a){
-  for (var i = a.length - 1; i > 0; i--){
-    var j = Math.floor(Math.random() * (i + 1));
-    var t = a[i]; a[i] = a[j]; a[j] = t;
+  function moveAt(clientX){
+    var r = C.cv.getBoundingClientRect();
+    G.bx = Math.max(40, Math.min(C.W - 40, clientX - r.left));
   }
-  return a;
-}
+  C.cv.addEventListener('pointermove', function(e){ if (G.running) moveAt(e.clientX); });
+  C.cv.addEventListener('pointerdown', function(e){ if (G.running) moveAt(e.clientX); });
+  C.cv.addEventListener('touchmove', function(e){ if (G.running){ moveAt(e.touches[0].clientX); e.preventDefault(); } }, {passive:false});
+  $('bStart').onclick = start;
+  return { resize: C.resize, state: G, start: start, moveAt: moveAt };
+})();
 
-function newGame(){
-  grid.innerHTML = '';
-  first = null; lock = false; moves = 0; matched = 0;
-  document.getElementById('moves').textContent = '0';
-  document.getElementById('mwin').classList.remove('on');
+/* ======================= 4. Бегун ======================= */
+window.RUN = (function(){
+  var C = setupCanvas($('cvRun')), ctx = C.ctx;
+  var G = { running:false, y:0, vy:0, speed:260, obs:[], next:400, meters:0 };
+  var best = ls('mrk_run_best');
+  $('rBest').textContent = best;
 
-  var deck = shuffle(PHOTOS.concat(PHOTOS));
-  deck.forEach(function(src){
-    var b = document.createElement('button');
-    b.className = 'mcard';
-    b.setAttribute('aria-label', 'карточка');
-    b.innerHTML = '<span class="inner">' +
-        '<span class="side back"><img src="img/meerkat.webp" alt=""></span>' +
-        '<span class="side front"><img src="' + src + '" alt="" loading="lazy"></span>' +
-      '</span>';
-    b.dataset.src = src;
-    b.onclick = function(){ flip(b); };
-    grid.appendChild(b);
-  });
-}
+  function hud(){
+    $('rScore').textContent = Math.floor(G.meters);
+    $('rBest').textContent = best;
+  }
+  function start(){
+    G.running = true; G.y = 0; G.vy = 0; G.speed = 260; G.obs = []; G.next = 420; G.meters = 0;
+    $('rOv').classList.add('hide'); hud();
+  }
+  function over(){
+    G.running = false;
+    if (G.meters > best){ best = Math.floor(G.meters); ls('mrk_run_best', best); }
+    $('rOv').querySelector('h2').textContent = 'Дорога прервалась';
+    $('rOv').querySelector('p').textContent = 'Пробежал ' + Math.floor(G.meters) + ' м. Рекорд: ' + best + ' м.';
+    $('rStart').textContent = 'Ещё раз';
+    $('rOv').classList.remove('hide');
+  }
+  function jump(){ if (G.running && G.y <= 0.5) G.vy = -620; }
 
-function flip(card){
-  if (lock || card.classList.contains('flip') || card.classList.contains('done')) return;
-  card.classList.add('flip');
-  if (!first){ first = card; return; }
+  var last = 0;
+  function loop(now){
+    var dt = Math.min(0.05, (last ? now - last : 16) / 1000); last = now;
+    var W = C.W, H = C.H;
+    ctx.clearRect(0, 0, W, H); drawGround(ctx, W, H);
+    var gy = H - 46;
 
-  moves++;
-  document.getElementById('moves').textContent = moves;
+    if (G.running){
+      G.speed = Math.min(560, G.speed + dt * 6);
+      G.meters += G.speed * dt / 10;
 
-  if (first.dataset.src === card.dataset.src){
-    first.classList.add('done'); card.classList.add('done');
-    first = null; matched += 2;
-    if (matched === 16){
-      var best = mbest(moves);
-      var win = document.getElementById('mwin');
-      win.textContent = 'Все пары найдены за ' + moves + ' ходов. Лучший результат: ' + best + '.';
-      win.classList.add('on');
-      document.getElementById('mbest').textContent = best + ' ходов';
+      G.vy += 1800 * dt;
+      G.y += G.vy * dt;
+      if (G.y > 0){ G.y = 0; G.vy = 0; }
+
+      G.next -= G.speed * dt;
+      if (G.next <= 0){
+        var tall = Math.random() < 0.35;
+        G.obs.push({ x: W + 40, w: tall ? 22 : 30, h: tall ? 54 : 30, kind: tall ? 'cactus' : 'rock' });
+        G.next = 260 + Math.random() * 240;
+      }
+
+      var px = W * 0.24;
+      for (var i = G.obs.length - 1; i >= 0; i--){
+        var o = G.obs[i];
+        o.x -= G.speed * dt;
+        if (o.x < -60) G.obs.splice(i, 1);
+        if (o.x < px + 20 && o.x + o.w > px - 12 && G.y > -o.h * 0.55){ over(); break; }
+      }
+      hud();
     }
-    return;
+
+    G.obs.forEach(function(o){
+      if (o.kind === 'rock'){
+        ctx.fillStyle = '#8a6a3c';
+        ctx.beginPath(); ctx.ellipse(o.x + o.w / 2, gy - o.h / 2, o.w / 1.6, o.h / 1.6, 0, 0, Math.PI * 2); ctx.fill();
+      } else {
+        ctx.fillStyle = '#5d7a3a';
+        ctx.fillRect(o.x + o.w / 2 - 6, gy - o.h, 12, o.h);
+        ctx.fillRect(o.x + o.w / 2 - 14, gy - o.h + 12, 8, 8);
+        ctx.fillRect(o.x + o.w / 2 + 4, gy - o.h + 22, 8, 8);
+      }
+    });
+
+    drawMeerkat(ctx, C.W * 0.24, gy + G.y, 0.95, false);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  C.cv.addEventListener('pointerdown', function(e){ e.preventDefault(); jump(); });
+  window.addEventListener('keydown', function(e){ if (e.code === 'Space'){ e.preventDefault(); jump(); } });
+  $('rStart').onclick = start;
+  return { resize: C.resize, state: G, start: start, jump: jump };
+})();
+
+/* ======================= 5. Норы ======================= */
+(function(){
+  var N = 9, MINES = 10, cells = [], opened = 0, flagged = 0, started = false, dead = false;
+  var flagMode = false, timer = null, secs = 0;
+  var grid = $('mGrid');
+
+  function neighbors(i){
+    var r = Math.floor(i / N), c = i % N, out = [];
+    for (var dr = -1; dr <= 1; dr++) for (var dc = -1; dc <= 1; dc++){
+      if (!dr && !dc) continue;
+      var rr = r + dr, cc = c + dc;
+      if (rr >= 0 && rr < N && cc >= 0 && cc < N) out.push(rr * N + cc);
+    }
+    return out;
   }
 
-  var a = first; first = null; lock = true;
-  setTimeout(function(){
-    a.classList.remove('flip'); card.classList.remove('flip');
-    lock = false;
-  }, 750);
-}
+  function build(){
+    grid.innerHTML = '';
+    cells = []; opened = 0; flagged = 0; started = false; dead = false; secs = 0;
+    $('nOpen').textContent = '0'; $('nTime').textContent = '0'; $('nLeft').textContent = '0';
+    clearInterval(timer);
+    for (var i = 0; i < N * N; i++){
+      var b = document.createElement('button');
+      b.className = 'cell'; b.dataset.i = i;
+      b.onclick = (function(idx){ return function(){ tap(idx); }; })(i);
+      b.oncontextmenu = (function(idx){ return function(e){ e.preventDefault(); mark(idx); }; })(i);
+      var lp = null;
+      b.addEventListener('pointerdown', (function(idx){ return function(){ lp = setTimeout(function(){ mark(idx); lp = null; }, 550); }; })(i));
+      b.addEventListener('pointerup', function(){ if (lp){ clearTimeout(lp); lp = null; } });
+      b.addEventListener('pointerleave', function(){ if (lp){ clearTimeout(lp); lp = null; } });
+      grid.appendChild(b);
+      cells.push({ el: b, mine: false, open: false, flag: false, n: 0 });
+    }
+  }
 
-document.getElementById('mrestart').onclick = newGame;
-newGame();
+  function placeMines(safe){
+    var banned = {}; banned[safe] = 1; neighbors(safe).forEach(function(x){ banned[x] = 1; });
+    var pool = [];
+    for (var i = 0; i < N * N; i++) if (!banned[i]) pool.push(i);
+    shuffle(pool);
+    pool.slice(0, MINES).forEach(function(i){ cells[i].mine = true; });
+    for (var k = 0; k < N * N; k++){
+      if (cells[k].mine) continue;
+      cells[k].n = neighbors(k).filter(function(j){ return cells[j].mine; }).length;
+    }
+  }
+
+  function openCell(i){
+    var c = cells[i];
+    if (c.open || c.flag) return;
+    c.open = true; opened++;
+    c.el.classList.add('open');
+    if (c.mine){ c.el.classList.add('snake'); c.el.textContent = '✖'; dead = true; reveal(); return; }
+    if (c.n){ c.el.textContent = c.n; c.el.classList.add('n' + Math.min(5, c.n)); }
+    $('nOpen').textContent = opened;
+    if (!c.n) neighbors(i).forEach(openCell);
+  }
+
+  function reveal(){
+    clearInterval(timer);
+    cells.forEach(function(c){
+      if (c.mine && !c.open){ c.el.classList.add('open', 'snake'); c.el.textContent = '✖'; }
+    });
+    setTimeout(function(){ alert('Змея! Попробуй ещё раз.'); build(); }, 350);
+  }
+
+  function checkWin(){
+    if (dead) return;
+    if (opened === N * N - MINES){
+      clearInterval(timer);
+      alert('Все норы открыты за ' + secs + ' с. Змеи остались ни с чем.');
+      build();
+    }
+  }
+
+  function tap(i){
+    if (dead) return;
+    if (flagMode){ mark(i); return; }
+    if (!started){ started = true; placeMines(i); timer = setInterval(function(){ secs++; $('nTime').textContent = secs; }, 1000); }
+    if (cells[i].flag) return;
+    openCell(i);
+    checkWin();
+  }
+
+  function mark(i){
+    if (dead || cells[i].open) return;
+    var c = cells[i];
+    c.flag = !c.flag;
+    c.el.classList.toggle('flag', c.flag);
+    c.el.textContent = c.flag ? '⚑' : '';
+    flagged += c.flag ? 1 : -1;
+    $('nLeft').textContent = flagged;
+  }
+
+  $('nFlag').onclick = function(){
+    flagMode = !flagMode;
+    this.textContent = 'Флажок: ' + (flagMode ? 'вкл' : 'выкл');
+  };
+  $('nRestart').onclick = build;
+  build();
+  window.MINES = { build: build, tap: tap, cells: function(){ return cells; } };
+})();
+
+/* ======================= 6. Момент ======================= */
+window.MOMENT = (function(){
+  var C = setupCanvas($('cvMoment')), ctx = C.ctx;
+  var G = { running:false, score:0, lives:3, time:30, up:false, upUntil:0, nextUp:0, flash:0 };
+  var best = ls('mrk_moment_best');
+
+  function hud(){
+    $('moScore').textContent = G.score;
+    $('moTime').textContent = Math.max(0, Math.ceil(G.time));
+    $('moLives').textContent = G.lives > 0 ? '●●●'.slice(0, G.lives) : '—';
+  }
+  function start(){
+    G.running = true; G.score = 0; G.lives = 3; G.time = 30; G.up = false;
+    G.nextUp = 700; G.upUntil = 0; G.flash = 0;
+    $('moOv').classList.add('hide'); hud();
+  }
+  function over(){
+    G.running = false;
+    if (G.score > best){ best = G.score; ls('mrk_moment_best', best); }
+    $('moOv').querySelector('h2').textContent = 'Смена окончена';
+    $('moOv').querySelector('p').textContent = 'Поймано моментов: ' + G.score + '. Рекорд: ' + best + '.';
+    $('moStart').textContent = 'Ещё раз';
+    $('moOv').classList.remove('hide');
+  }
+  var last = 0;
+  function loop(now){
+    var dt = Math.min(0.05, (last ? now - last : 16) / 1000); last = now;
+    var W = C.W, H = C.H;
+    ctx.clearRect(0, 0, W, H); drawGround(ctx, W, H);
+    var gy = H - 46;
+
+    if (G.running){
+      G.time -= dt;
+      if (G.flash > 0) G.flash -= dt;
+      if (G.time <= 0) over();
+
+      if (G.up && now > G.upUntil){
+        G.up = false;
+        if (--G.lives <= 0) over();
+        hud();
+      }
+      if (!G.up && G.running){
+        G.nextUp -= dt * 1000;
+        if (G.nextUp <= 0){
+          G.up = true;
+          G.upUntil = now + Math.max(600, 1300 - G.score * 40);
+          G.nextUp = 520 + Math.random() * 700;
+        }
+      }
+    }
+
+    ctx.fillStyle = 'rgba(120,92,54,.28)';
+    ctx.beginPath(); ctx.ellipse(W / 2, gy + 3, 34, 8, 0, 0, Math.PI * 2); ctx.fill();
+    if (G.up) drawMeerkat(ctx, W / 2, gy, 1.15, false);
+    else {
+      ctx.fillStyle = '#c99b62';
+      ctx.beginPath(); ctx.arc(W / 2, gy - 16, 13, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = '#f0dcc0';
+      ctx.beginPath(); ctx.arc(W / 2, gy - 16, 8, Math.PI, 0); ctx.fill();
+    }
+    if (G.flash > 0){
+      ctx.save(); ctx.globalAlpha = Math.min(1, G.flash); ctx.fillStyle = '#7a8b3a';
+      ctx.font = '800 26px -apple-system,Segoe UI,Roboto,sans-serif';
+      ctx.textAlign = 'center'; ctx.fillText('+1', W / 2, gy - 120); ctx.restore();
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  function hit(){
+    if (!G.running) return;
+    if (G.up){ G.score++; G.up = false; G.flash = 0.8; hud(); }
+  }
+  C.cv.addEventListener('pointerdown', function(e){ e.preventDefault(); hit(); });
+  window.addEventListener('keydown', function(e){ if (e.code === 'Space'){ e.preventDefault(); hit(); } });
+  $('moStart').onclick = start;
+  return { resize: C.resize, state: G, start: start, hit: hit };
+})();
+
+/* ======================= 7. Викторина ======================= */
+(function(){
+  var Q = [
+    ['Сколько сурикатов обычно живёт в одной семье?', ['5–7', 'Двадцать–тридцать', 'Около сотни'], 1],
+    ['Кто стоит на задних лапах, пока остальные копают?', ['Часовой', 'Вожак', 'Никто, все работают'], 0],
+    ['Что сурикат делает со скорпионом перед едой?', ['Отрывает жало и трёт о песок', 'Сразу глотает', 'Отдаёт детям'], 0],
+    ['Зачем сурикату чёрные круги вокруг глаз?', ['Чтобы казаться больше', 'Меньше бликов от солнца', 'Это признак возраста'], 1],
+    ['На что сурикат опирается, когда стоит столбиком?', ['На палку', 'На хвост', 'На лапы сородича'], 1],
+    ['Сколько входов бывает у системы нор?', ['Один', 'Два', 'Много'], 2],
+    ['Как сурикаты различают друг друга?', ['По запаху песка', 'По голосу', 'По размеру хвоста'], 1],
+    ['Как сурикаты поддерживают чистоту?', ['Купаются в пыли', 'Плавают в лужах', 'Чистят шерсть камнями'], 0],
+    ['Что делают сурикаты ночью?', ['Спят вповалку в куче', 'Охотятся', 'Стоят по очереди у норы'], 0],
+    ['Сколько живёт сурикат в природе?', ['2–3 года', '5–10 лет', '20 лет'], 1],
+    ['Кто остаётся с детёнышами, пока остальные работают?', ['Только мать', 'Кто-то из взрослых, не обязательно мать', 'Никто, они сами'], 1],
+    ['Кого сурикат ест, согласно факту №4?', ['Скорпиона', 'Черепаху', 'Змею'], 0]
+  ];
+  var order = shuffle(Q.map(function(_, i){ return i; }));
+  var idx = 0, score = 0;
+
+  function render(){
+    if (idx >= order.length){
+      $('qText').textContent = 'Готово! Верно ' + score + ' из ' + order.length + '.';
+      $('qOpts').innerHTML = '<button class="btn" id="qAgain">Ещё раз</button>';
+      $('qAgain').onclick = function(){
+        order = shuffle(Q.map(function(_, i){ return i; }));
+        idx = 0; score = 0; $('qScore').textContent = '0'; render();
+      };
+      return;
+    }
+    var item = Q[order[idx]];
+    $('qNum').textContent = String(idx + 1);
+    $('qText').textContent = item[0];
+    $('qOpts').innerHTML = item[1].map(function(t, i){
+      return '<button class="qopt" data-i="' + i + '">' + t + '</button>';
+    }).join('');
+    Array.prototype.forEach.call($('qOpts').children, function(btn){
+      btn.onclick = function(){
+        var picked = +btn.dataset.i, correct = item[2];
+        Array.prototype.forEach.call($('qOpts').children, function(b){
+          b.disabled = true;
+          if (+b.dataset.i === correct) b.classList.add('right');
+        });
+        if (picked !== correct) btn.classList.add('wrong');
+        else { score++; $('qScore').textContent = score; }
+        setTimeout(function(){ idx++; render(); }, 800);
+      };
+    });
+  }
+  render();
+})();
+
+/* ======================= 8. Тень ======================= */
+window.SHADOW = (function(){
+  var C = setupCanvas($('cvShadow')), ctx = C.ctx;
+  var G = { running:false, score:0, lives:3, mx:0, target:0, sy:0, speed:150, radius:42, active:false };
+  var best = ls('mrk_shadow_best');
+
+  function hud(){
+    $('sScore').textContent = G.score;
+    $('sLives').textContent = G.lives > 0 ? '●●●'.slice(0, G.lives) : '—';
+  }
+  function start(){
+    G.score = 0; G.lives = 3; G.sy = -40; G.speed = 150; G.radius = 42;
+    G.target = Math.random() * (C.W - 80) + 40;
+    G.mx = C.W / 2; G.active = true; G.running = true;
+    $('sOv').classList.add('hide'); hud();
+  }
+  function over(){
+    G.running = false;
+    if (G.score > best){ best = G.score; ls('mrk_shadow_best', best); }
+    $('sOv').querySelector('h2').textContent = 'Тень достала';
+    $('sOv').querySelector('p').textContent = 'Уклонений: ' + G.score + '. Рекорд: ' + best + '.';
+    $('sStart').textContent = 'Ещё раз';
+    $('sOv').classList.remove('hide');
+  }
+  var last = 0;
+  function loop(now){
+    var dt = Math.min(0.05, (last ? now - last : 16) / 1000); last = now;
+    var W = C.W, H = C.H;
+    ctx.clearRect(0, 0, W, H); drawGround(ctx, W, H);
+    var gy = H - 46;
+
+    if (G.running && G.active){
+      G.sy += G.speed * dt;
+      if (G.sy >= gy - 10){
+        if (Math.abs(G.mx - G.target) < G.radius){
+          if (--G.lives <= 0) over();
+        } else {
+          G.score++;
+          G.speed = Math.min(420, G.speed + 12);
+          G.radius = Math.min(70, G.radius + 1.6);
+        }
+        G.target = Math.random() * (W - 80) + 40;
+        G.sy = -40;
+        hud();
+      }
+    }
+
+    if (G.running){
+      ctx.save(); ctx.strokeStyle = 'rgba(178,59,46,.65)'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(G.target - 9, gy - 20); ctx.lineTo(G.target + 9, gy - 2);
+      ctx.moveTo(G.target + 9, gy - 20); ctx.lineTo(G.target - 9, gy - 2);
+      ctx.stroke(); ctx.restore();
+
+      ctx.save();
+      ctx.globalAlpha = 0.38 + 0.45 * Math.min(1, Math.max(0, G.sy / gy));
+      ctx.fillStyle = '#241c13';
+      ctx.beginPath(); ctx.ellipse(G.target, Math.max(10, G.sy), G.radius, G.radius * 0.55, 0, 0, Math.PI * 2);
+      ctx.fill(); ctx.restore();
+    }
+
+    drawMeerkat(ctx, G.mx, gy, 1.15, false);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  function moveAt(clientX){
+    var r = C.cv.getBoundingClientRect();
+    G.mx = Math.max(30, Math.min(C.W - 30, clientX - r.left));
+  }
+  C.cv.addEventListener('pointermove', function(e){ moveAt(e.clientX); });
+  C.cv.addEventListener('pointerdown', function(e){ e.preventDefault(); moveAt(e.clientX); });
+  C.cv.addEventListener('touchmove', function(e){ moveAt(e.touches[0].clientX); e.preventDefault(); }, {passive:false});
+  $('sStart').onclick = start;
+  return { resize: C.resize, state: G, start: start, moveAt: moveAt };
+})();
 </script>
 </body>
 </html>
