@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Новости — meercat.ru</title>
+<title>Заметки о сурикатах — meercat.ru</title>
 <meta name="description" content="Новости норы: что нового на сайте и в играх. Обновляется каждый день.">
 <meta name="theme-color" content="#f7f1e6">
 <link rel="icon" href="img/favicon.png">
@@ -47,7 +47,7 @@
   .list{display:flex;flex-direction:column;gap:12px}
   .item{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px 17px;
     box-shadow:0 10px 26px rgba(90,70,40,.08);display:flex;gap:14px;align-items:flex-start}
-  .item .date{flex:none;width:62px;text-align:center}
+  .item .date{flex:none;width:76px;text-align:center}
   .item .date b{display:block;font-size:19px;line-height:1;color:var(--accent2)}
   .item .date span{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);font-weight:800}
   .item .body{flex:1;min-width:0}
@@ -59,7 +59,9 @@
   .chip.сайт{background:rgba(217,131,36,.16);color:#8a4b10}
   .chip.факт{background:rgba(122,139,58,.16);color:#4f5f22}
   .chip.история{background:rgba(122,90,40,.14);color:#7a4b12}
-  .item .date b.yr{font-size:13.5px;letter-spacing:-.2px}
+  .chip.сурикат{background:rgba(47,156,147,.16);color:#256b5f}
+  .item p.plain{font-size:15.5px;color:var(--ink);font-weight:600;line-height:1.55}
+  .item .date b.yr{font-size:12.5px;letter-spacing:-.2px;white-space:nowrap}
   .src{display:inline-block;margin-top:6px;font-size:11.5px;color:#a5804e;font-weight:700;text-decoration:none}
   .src:hover{color:var(--accent2)}
   .empty{color:var(--dim);text-align:center;padding:24px 0}
@@ -89,8 +91,8 @@
 </header>
 
 <main class="wrap">
-  <h1>Новости <span>норы</span></h1>
-  <p class="lead">Что нового на сайте — и заметки из истории изучения сурикатов. Факт дня меняется сам, каждый день.</p>
+  <h1>Заметки <span>о сурикатах</span></h1>
+  <p class="lead">Каждый день — новая заметка о сурикатах: повадки, история изучения, жизнь колонии. Сверху — факт дня.</p>
 
   <div class="fact" id="factBox">
     <span class="tag">Факт дня</span>
@@ -200,10 +202,7 @@ var FACTS = [
 
 /* локальные новости, если news.json ещё нет рядом */
 var FALLBACK = [
-  { date:'2026-10-31', tag:'игра', title:'Нора суриката теперь в 3D',
-    text:'Сурикат-маг с посохом держит нору в объёмной пустыне: 200 волн, боссы и шесть школ магии.' },
-  { date:'2026-10-30', tag:'игра', title:'Клад суриката: автомат на девять линий',
-    text:'Пять барабанов, девять линий и призовые норки.' }
+  { date:'2026-10-31', tag:'сурикат', text:'Сурикаты живут колониями до 30 зверей и всегда ставят кого-то «наверх» — сторожить небо.' }
 ];
 
 function dayIndex(){
@@ -244,8 +243,8 @@ function render(items){
     return '<article class="item">' + left +
       '<div class="body">' +
         '<span class="chip ' + (it.tag || 'сайт') + '">' + (it.tag || 'сайт') + '</span>' +
-        '<h3>' + it.title + '</h3>' +
-        '<p>' + it.text + '</p>' + src +
+        (it.title ? '<h3>' + it.title + '</h3>' : '') +
+        (it.title ? '<p>' + it.text + '</p>' : '<p class="plain">' + it.text + '</p>') + src +
       '</div></article>';
   }).join('');
 }
