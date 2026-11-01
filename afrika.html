@@ -63,6 +63,17 @@
     .tip{display:none}
     .meerkat{width:52px;bottom:70px}
   }
+
+  /* компактная верхняя панель на телефоне */
+  @media(max-width:480px){
+    header .nav,header .navlinks{height:56px;gap:6px}
+    header .brand img{width:26px;height:26px}
+    header .brand span{display:none}
+    header .navlinks,header .subnav{gap:4px}
+    header .navlinks a,header .subnav a{padding:6px 7px;font-size:11px;border-radius:10px}
+  }
+  header .nav,header .navlinks{overflow-x:auto;scrollbar-width:none}
+  header .nav::-webkit-scrollbar,header .navlinks::-webkit-scrollbar{display:none}
 </style>
 </head>
 <body>

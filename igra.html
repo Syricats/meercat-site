@@ -85,6 +85,17 @@
     .page-hero .inner{padding:40px 20px 34px}
     .page-hero h1{font-size:27px}
   }
+
+  /* компактная верхняя панель на телефоне */
+  @media(max-width:480px){
+    header .nav,header .navlinks{height:56px;gap:6px}
+    header .brand img{width:26px;height:26px}
+    header .brand span{display:none}
+    header .navlinks,header .subnav{gap:4px}
+    header .navlinks a,header .subnav a{padding:6px 7px;font-size:11px;border-radius:10px}
+  }
+  header .nav,header .navlinks{overflow-x:auto;scrollbar-width:none}
+  header .nav::-webkit-scrollbar,header .navlinks::-webkit-scrollbar{display:none}
 </style>
 </head>
 <body>
@@ -95,7 +106,7 @@
       <img src="img/meerkat.webp" alt="сурикат">
       <span>meercat<b>.ru</b></span>
     </a>
-    <nav class="subnav"><a href="igra.html" class="on">Игры</a><a href="novosti.html">Новости</a><a href="karta.html">Карта</a><a href="zvezdy.html">Звёзды</a></nav>
+    <nav class="subnav"><a href="igra.html" class="on">Игры</a><a href="novosti.html">Новости</a><a href="karta.html">Карта</a><a href="surikat.html">Сурикат</a><a href="zvezdy.html">Звёзды</a></nav>
   </div>
 </header>
 

@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сурикат: как он устроен — meercat.ru</title>
+<meta name="description" content="Живая карточка Калахари, анатомия суриката, разрез норы, сравнение размеров и 3D-модель.">
+<meta name="theme-color" content="#f7f1e6">
+<link rel="icon" href="img/favicon.png">
+<style>
+  :root{
+    --sand:#f7f1e6; --ink:#241c13; --ink2:#5b4c3a; --dim:#8a7761;
+    --line:rgba(90,70,40,.16); --card:#fffdf8; --accent:#d98324; --accent2:#b8541f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;background:var(--sand);color:var(--ink);font-size:17px;line-height:1.6;
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background-image:
+      radial-gradient(900px 520px at 85% -10%, rgba(217,131,36,.12), transparent 62%),
+      radial-gradient(700px 460px at -10% 8%, rgba(122,139,58,.10), transparent 60%);
+    background-attachment:fixed;
+  }
+  a{color:inherit}
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px}
+
+  /* шапка */
+  header{position:sticky;top:0;z-index:30;backdrop-filter:blur(14px);
+    background:rgba(247,241,230,.9);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:8px;height:64px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;text-decoration:none}
+  .brand img{width:34px;height:34px;border-radius:50%;box-shadow:0 4px 12px rgba(90,70,40,.22)}
+  .brand b{color:var(--accent2)}
+  .subnav{margin-left:auto;display:flex;gap:7px}
+  .subnav a{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 13px;
+    font-weight:700;font-size:13.5px;text-decoration:none;white-space:nowrap}
+  .subnav a.on{background:var(--accent2);border-color:var(--accent2);color:#fff8ec}
+  @media(max-width:520px){
+    .brand span{display:none}
+    .subnav{gap:5px}
+    .subnav a{padding:7px 9px;font-size:12px}
+  }
+
+  main{padding:26px 0 60px}
+  h1{font-size:34px;line-height:1.1;letter-spacing:-.6px;margin-bottom:6px}
+  h1 span{color:var(--accent2)}
+  .lead{color:var(--ink2);margin-bottom:20px;max-width:620px}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+  .card{min-width:0;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;
+    box-shadow:0 12px 30px rgba(90,70,40,.08)}
+  .card h2{font-size:16px;margin-bottom:4px}
+  .card .sub{font-size:12px;color:var(--dim);margin-bottom:10px}
+  .card.wide{grid-column:1/-1}
+
+  /* 1. Калахари сейчас */
+  .now{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .now .temp{font-size:40px;font-weight:900;line-height:1;color:var(--accent2)}
+  .now .where{font-size:12.5px;color:var(--dim)}
+  .card .row{display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;color:var(--dim);margin-top:10px}
+  .card .row > div{display:flex;flex-direction:column;gap:1px}
+  .card .row b{font-size:14.5px;color:var(--ink);line-height:1.2}
+  .now .sun{font-size:34px;line-height:1}
+
+  /* 2. анатомия */
+  .anat{display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:center}
+  .anat svg{width:100%;height:auto;overflow:visible}
+  .hit{fill:transparent;cursor:pointer}
+  .hit:hover + .dot, .hit.on + .dot{fill:#ffcf5c}
+  .dot{fill:#c8641f;stroke:#fff6e2;stroke-width:2.2;pointer-events:none;
+    animation:pulse 2.6s ease-in-out infinite}
+  .pin:nth-child(2) .dot{animation-delay:.3s}
+  .pin:nth-child(3) .dot{animation-delay:.6s}
+  .pin:nth-child(4) .dot{animation-delay:.9s}
+  .pin:nth-child(5) .dot{animation-delay:1.2s}
+  @keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+  .pin .hit.on + .dot,.pin:hover .dot{fill:#ffcf5c}
+  .anat .text{font-size:13px;color:var(--ink2);min-height:66px}
+  .anat .text b{color:var(--accent2);display:block;font-size:14px;margin-bottom:3px}
+
+  /* 3. нора */
+  .burrow-svg{width:100%;height:auto;overflow:visible}
+  .chamber{cursor:pointer}
+  .chamber:hover .zone{fill:rgba(255,207,92,.55)}
+  .zone{fill:transparent;transition:fill .15s}
+  .cap{font-size:12.5px;color:var(--ink2);min-height:38px;margin-top:6px}
+
+  /* 4. размеры */
+  .sizes{display:flex;flex-direction:column;gap:9px}
+  .row-s{display:grid;grid-template-columns:88px 1fr 88px;gap:8px;align-items:center;font-size:12.5px}
+  .bar{height:16px;border-radius:8px;background:linear-gradient(90deg,#e6a45c,#d98324);
+    transform-origin:left;animation:grow .7s ease both}
+  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  .bar.b1{background:linear-gradient(90deg,#e6a45c,#d98324)}
+  .bar.b2{background:linear-gradient(90deg,#cfd6c7,#9aa48f)}
+  .bar.b3{background:linear-gradient(90deg,#c9b7a3,#9b8674)}
+  .bar.b4{background:linear-gradient(90deg,#b9c7d6,#7f93a8)}
+  .val{font-weight:800;color:var(--accent2);text-align:right;font-size:12px;white-space:nowrap}
+
+  /* 5. 3D */
+  #gl canvas{width:100%!important;height:100%!important;display:block}
+  #gl{width:100%;height:230px;border-radius:14px;background:radial-gradient(circle at 50% 40%, #fff4dd, #f0dcbb);
+    touch-action:none;cursor:grab}
+  .glbtns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .glbtns button{border:1px solid var(--line);background:#fff8ec;border-radius:10px;padding:7px 11px;
+    font-size:12px;font-weight:700;cursor:pointer;color:var(--ink)}
+  .glbtns button.on{background:var(--accent2);border-color:var(--accent2);color:#fff8ec}
+
+  .soon{grid-column:1/-1;background:#fff4d9;border:1px dashed rgba(184,84,31,.35);border-radius:16px;
+    padding:12px 14px;font-size:12.5px;color:#7a5327}
+  footer{margin-top:24px;color:var(--dim);font-size:13px;text-align:center}
+
+  @media(max-width:820px){
+    .grid{grid-template-columns:1fr}
+    .anat{grid-template-columns:150px 1fr}
+  }
+
+  /* компактная верхняя панель на телефоне */
+  @media(max-width:480px){
+    header .nav,header .navlinks{height:56px;gap:6px}
+    header .brand img{width:26px;height:26px}
+    header .brand span{display:none}
+    header .navlinks,header .subnav{gap:4px}
+    header .navlinks a,header .subnav a{padding:6px 7px;font-size:11px;border-radius:10px}
+  }
+  header .nav,header .navlinks{overflow-x:auto;scrollbar-width:none}
+  header .nav::-webkit-scrollbar,header .navlinks::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="index.html"><img src="img/meerkat.webp" alt=""><span>meercat<b>.ru</b></span></a>
+    <nav class="subnav">
+      <a href="igra.html">Игры</a>
+      <a href="novosti.html">Новости</a>
+      <a href="zvezdy.html">Звёзды</a>
+      <a href="karta.html">Карта</a>
+      <a href="surikat.html" class="on">Сурикат</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1>Сурикат <span>изнутри</span></h1>
+  <p class="lead">Живая карточка Калахари, анатомия зверька, разрез норы, сравнение размеров и модель, которую можно крутить.</p>
+
+  <div class="grid">
+
+    <!-- 1 -->
+    <section class="card">
+      <h2>Сейчас в Калахари</h2>
+      <div class="sub">Погода обновляется сама, время — местное, GMT+2</div>
+      <div class="now">
+        <div class="sun" id="wxIcon">☾</div>
+        <div>
+          <div class="temp" id="wxTemp">—</div>
+          <div class="where">Kuruman River Reserve, ЮАР</div>
+        </div>
+      </div>
+      <div class="row">
+        <div>Сейчас<b id="wxTime">—</b></div>
+        <div>Ветер<b id="wxWind">—</b></div>
+        <div>Восход<b id="wxSunrise">—</b></div>
+        <div>Закат<b id="wxSunset">—</b></div>
+        <div>Длина дня<b id="wxLen">—</b></div>
+      </div>
+      <div class="where" id="wxNote" style="margin-top:8px"></div>
+    </section>
+
+    <!-- 2 -->
+    <section class="card">
+      <h2>Анатомия</h2>
+      <div class="sub">Нажми на точку — узнаешь, зачем это сурикату</div>
+      <div class="anat">
+        <svg viewBox="0 0 120 200" aria-label="Схема суриката">
+          <ellipse cx="58" cy="192" rx="30" ry="5" fill="#000" opacity=".09"/>
+
+          <!-- хвост -->
+          <path d="M70 126c14 3 21 13 20 26-1 8-5 13-10 16" fill="none" stroke="#b07a3c"
+                stroke-width="8" stroke-linecap="round"/>
+
+          <!-- лапы -->
+          <path d="M52 138l-2 30M68 138l2 30" stroke="#b07a3c" stroke-width="11" stroke-linecap="round"/>
+          <ellipse cx="49" cy="170" rx="7" ry="4" fill="#a46b38"/>
+          <ellipse cx="71" cy="170" rx="7" ry="4" fill="#a46b38"/>
+
+          <!-- тело -->
+          <path d="M60 62c-10 0-16 7-17 18-1 12 0 26 1 38 .4 7 2.6 10 7 10h18c4.4 0 6.6-3 7-10 1-12 2-26 1-38-1-11-7-18-17-18z"
+                fill="#d9a86a" stroke="#3a2413" stroke-width="3"/>
+
+          <!-- живот -->
+          <ellipse cx="60" cy="108" rx="10" ry="21" fill="#f7e8cf"/>
+
+          <!-- лапки на груди -->
+          <path d="M52 84c-3 6-3 12 0 17M68 84c3 6 3 12 0 17" fill="none" stroke="#c08a4a"
+                stroke-width="6.5" stroke-linecap="round"/>
+
+          <!-- уши -->
+          <circle cx="41" cy="34" r="7.5" fill="#c08a4a" stroke="#3a2413" stroke-width="2.4"/>
+          <circle cx="79" cy="34" r="7.5" fill="#c08a4a" stroke="#3a2413" stroke-width="2.4"/>
+
+          <!-- голова -->
+          <ellipse cx="60" cy="45" rx="20" ry="18" fill="#e8c79a" stroke="#3a2413" stroke-width="3"/>
+          <ellipse cx="60" cy="54" rx="11" ry="8" fill="#f7e8ca"/>
+          <ellipse cx="60" cy="51" rx="3.2" ry="2.4" fill="#3a2413"/>
+          <ellipse cx="52" cy="43" rx="3.4" ry="4" fill="#3a2413"/>
+          <ellipse cx="68" cy="43" rx="3.4" ry="4" fill="#3a2413"/>
+
+          <g id="dots">
+            <g class="pin"><circle class="hit" cx="52" cy="43" r="9.5" data-k="eyes"/><circle class="dot" cx="45" cy="38" r="3.7"/></g>
+            <g class="pin"><circle class="hit" cx="41" cy="30" r="9" data-k="ears"/><circle class="dot" cx="34" cy="24" r="3.6"/></g>
+            <g class="pin"><circle class="hit" cx="60" cy="58" r="9" data-k="nose"/><circle class="dot" cx="60" cy="64" r="3.6"/></g>
+            <g class="pin"><circle class="hit" cx="47" cy="172" r="10" data-k="claws"/><circle class="dot" cx="41" cy="176" r="3.7"/></g>
+            <g class="pin"><circle class="hit" cx="86" cy="152" r="11" data-k="tail"/><circle class="dot" cx="90" cy="140" r="3.7"/></g>
+          </g>
+        </svg>
+        <div class="text" id="anatText"><b>Нажми на точку</b>Глаза, уши, нос, когти и хвост — у каждого своя работа.</div>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="card wide">
+      <h2>Нора в разрезе</h2>
+      <div class="sub">Нажми на камеру — что там происходит</div>
+      <svg class="burrow-svg" viewBox="0 0 760 268" aria-label="Разрез норы суриката">
+        <defs>
+          <linearGradient id="soil" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#eccf9f"/><stop offset="1" stop-color="#d9b583"/>
+          </linearGradient>
+          <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#dcecc2"/><stop offset="1" stop-color="#c5dda2"/>
+          </linearGradient>
+        </defs>
+
+        <rect x="0" y="0" width="760" height="100" fill="url(#grass)" rx="12"/>
+        <rect x="0" y="100" width="760" height="168" fill="url(#soil)" rx="12"/>
+        <path d="M0 100h760" stroke="#a8bd84" stroke-width="3"/>
+
+        <!-- главный холм -->
+        <path d="M62 100c0-34 30-56 66-56s66 22 66 56z" fill="#d9a45e" stroke="#a87a42" stroke-width="3"/>
+        <ellipse cx="128" cy="100" rx="24" ry="12" fill="#5a3a1c"/>
+        <ellipse cx="128" cy="100" rx="17" ry="7.5" fill="#180d05"/>
+
+        <!-- туннели -->
+        <path d="M128 100c2 34 34 44 74 52 44 9 96 12 152 12" stroke="#b98750" stroke-width="17"
+              fill="none" stroke-linecap="round"/>
+        <path d="M354 164c60 0 116-4 156-14 24-6 38-18 40-34" stroke="#b98750" stroke-width="17"
+              fill="none" stroke-linecap="round"/>
+
+        <!-- запасной выход -->
+        <path d="M516 78c0-22 20-34 44-34s44 12 44 34z" fill="#d9a45e" stroke="#a87a42" stroke-width="3"/>
+        <ellipse cx="560" cy="78" rx="16" ry="8" fill="#5a3a1c"/>
+        <ellipse cx="560" cy="78" rx="11" ry="5" fill="#180d05"/>
+
+        <!-- камеры -->
+        <path d="M300 190v-22M440 186v-20" stroke="#b98750" stroke-width="13" stroke-linecap="round"/>
+        <g class="chamber" data-k="sleep">
+          <ellipse class="zone" cx="300" cy="196" rx="52" ry="34"/>
+          <ellipse cx="300" cy="196" rx="40" ry="24" fill="#a5713c" stroke="#7d5127" stroke-width="2.5"/>
+          <path d="M272 196c8-7 16-10 28-10s20 3 28 10" stroke="#8c5f31" stroke-width="2" fill="none" opacity=".7"/>
+        </g>
+        <g class="chamber" data-k="nursery">
+          <ellipse class="zone" cx="440" cy="196" rx="46" ry="31"/>
+          <ellipse cx="440" cy="196" rx="34" ry="21" fill="#a5713c" stroke="#7d5127" stroke-width="2.5"/>
+        </g>
+        <g class="chamber" data-k="exit">
+          <ellipse class="zone" cx="560" cy="78" rx="34" ry="24"/>
+        </g>
+        <g class="chamber" data-k="entrance">
+          <ellipse class="zone" cx="128" cy="100" rx="34" ry="24"/>
+        </g>
+
+        <!-- подписи -->
+        <text x="128" y="64" text-anchor="middle" font-size="12.5" font-weight="800" fill="#4d3113">вход</text>
+        <text x="300" y="234" text-anchor="middle" font-size="13" font-weight="800" fill="#4d3113">спальня</text>
+        <text x="440" y="236" text-anchor="middle" font-size="13" font-weight="800" fill="#4d3113">детская</text>
+        <text x="560" y="46" text-anchor="middle" font-size="12.5" font-weight="800" fill="#4d3113">запасной выход</text>
+        <text x="690" y="252" text-anchor="middle" font-size="11.5" font-weight="700" fill="#9a8464">глубина до 2 м</text>
+
+        <path d="M150 92c-4-9 0-15 5-18M176 90c-3-8 0-13 4-16M96 96c4-8 1-13-3-16" stroke="#7cb35a" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M612 96c4-8 1-13-3-16M636 96c4-8 1-13-3-16" stroke="#7cb35a" stroke-width="3" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="cap" id="burrowCap">Туннели соединены между собой, а выходов обычно несколько — чтобы был запасной.</div>
+    </section>
+
+    <!-- 4 -->
+    <section class="card">
+      <h2>Размеры</h2>
+      <div class="sub">Сурикат рядом с теми, кого мы знаем</div>
+      <div class="sizes" id="sizes"></div>
+    </section>
+
+    <!-- 5 -->
+    <section class="card">
+      <h2>Модель</h2>
+      <div class="sub">Крути пальцем или мышью</div>
+      <div id="gl"></div>
+      <div class="glbtns">
+        <button id="poseStand" class="on">Стоит</button>
+        <button id="poseDig">Копает</button>
+        <button id="spinBtn">Вращать</button>
+      </div>
+    </section>
+
+    <div class="soon">
+      <b>Скоро:</b> голоса сурикатов — настоящие записи тревожных криков и зова детёнышей.
+      Пока не нашёл файлы со свободной лицензией, ищу.
+    </div>
+  </div>
+
+  <footer>© 2026 meercat.ru · <a href="index.html">на главную</a></footer>
+</main>
+
+<script type="module">
+/* ================= 1. Погода в Калахари ================= */
+const WX_URL = 'https://api.open-meteo.com/v1/forecast?latitude=-26.9&longitude=21.8' +
+  '&current=temperature_2m,weather_code,is_day,wind_speed_10m' +
+  '&daily=sunrise,sunset&timezone=Africa%2FJohannesburg';
+
+const WCODES = {
+  0: 'ясно', 1: 'почти ясно', 2: 'переменная облачность', 3: 'облачно',
+  45: 'туман', 48: 'изморозь', 51: 'морось', 53: 'морось', 55: 'морось',
+  61: 'дождь', 63: 'дождь', 65: 'сильный дождь', 71: 'снег', 80: 'ливень',
+  81: 'ливень', 82: 'сильный ливень', 95: 'гроза', 96: 'гроза', 99: 'гроза'
+};
+
+function hhmm(iso){ return iso ? iso.slice(11, 16) : '—'; }
+
+fetch(WX_URL).then(r => r.json()).then(d => {
+  const c = d.current, day = d.daily;
+  document.getElementById('wxTemp').textContent = Math.round(c.temperature_2m) + '°';
+  document.getElementById('wxIcon').textContent = c.is_day ? '☀' : '☾';
+  document.getElementById('wxTime').textContent = hhmm(c.time);
+  document.getElementById('wxWind').textContent = Math.round(c.wind_speed_10m) + ' км/ч';
+  document.getElementById('wxSunrise').textContent = hhmm(day.sunrise[0]);
+  document.getElementById('wxSunset').textContent = hhmm(day.sunset[0]);
+
+  const toMin = t => { const p = t.slice(11, 16).split(':'); return +p[0] * 60 + +p[1]; };
+  const len = toMin(day.sunset[0]) - toMin(day.sunrise[0]);
+  document.getElementById('wxLen').textContent = Math.floor(len / 60) + ' ч ' + String(len % 60).padStart(2, '0') + ' мин';
+
+  const cond = WCODES[c.weather_code] || 'без осадков';
+  let note;
+  if (!c.is_day) note = 'Ночь. Колония в норе, у входа дежурит один зверь.';
+  else if (c.temperature_2m > 30) note = 'Жарко. Сурикаты кормятся в тени и уходят в глубокие камеры.';
+  else note = 'День. Самое время копать и кормиться: ' + cond + '.';
+  document.getElementById('wxNote').textContent = note;
+}).catch(() => {
+  document.getElementById('wxNote').textContent = 'Погоду сейчас не отдать — нет связи с сервисом.';
+});
+
+/* часы Калахари */
+function tickClock(){
+  const t = new Date(Date.now() + 2 * 3600 * 1000); // GMT+2
+  const s = String(t.getUTCHours()).padStart(2,'0') + ':' + String(t.getUTCMinutes()).padStart(2,'0');
+  const el = document.getElementById('wxTime');
+  if (el && el.textContent.length === 5) el.textContent = s;
+}
+setInterval(tickClock, 30000);
+
+/* ================= 2. Анатомия ================= */
+const ANAT = {
+  eyes: ['Глаза', 'Тёмные «очки» вокруг глаз работают как козырьки: солнце не слепит, пока сурикат смотрит вдаль.'],
+  ears: ['Уши', 'Маленькие, с тёмными кончиками — меньше нагреваются на солнце и лучше слышат шорох под песком.'],
+  nose: ['Нос', 'Нюх в десятки раз острее человеческого: по запаху находит личинку под землёй.'],
+  claws: ['Когти', 'Четыре длинных пальца с крепкими когтями — главный инструмент: копать, держать скорпиона, цепляться.'],
+  tail: ['Хвост', 'Балансир, когда сурикат стоит столбиком, и «флаг» для своих: по позе видно настроение.']
+};
+document.querySelectorAll('.anat .hit').forEach(h => {
+  h.addEventListener('click', () => {
+    const k = h.dataset.k, d = ANAT[k];
+    document.querySelectorAll('.anat .hit').forEach(x => x.classList.remove('on'));
+    h.classList.add('on');
+    document.getElementById('anatText').innerHTML = '<b>' + d[0] + '</b>' + d[1];
+  });
+});
+
+/* ================= 3. Нора ================= */
+const BURROW = {
+  entrance: 'Вход. Утром первым выходит один зверь, осматривается — и только потом выходит вся колония.',
+  sleep: 'Спальня. Здесь ночуют клубком по 10–12 зверей: так теплее, ведь в пустыне ночью холодно.',
+  nursery: 'Детская. Детёныши остаются здесь первые недели, с ними сидят «няньки».',
+  exit: 'Запасной выход. Если в главный вход лезет хищник, колония уходит через этот.'
+};
+document.querySelectorAll('.chamber').forEach(c => {
+  c.addEventListener('click', () => {
+    document.getElementById('burrowCap').textContent = BURROW[c.dataset.k] || '';
+  });
+});
+
+/* ================= 4. Размеры ================= */
+const SIZES = [
+  { n: 'Сурикат', v: 30,  c: 'b1', t: '30 см стоя' },
+  { n: 'Кошка',   v: 25,  c: 'b2', t: '25 см в холке' },
+  { n: 'Собака',  v: 60,  c: 'b3', t: '60 см в холке' },
+  { n: 'Человек', v: 170, c: 'b4', t: '170 см' }
+];
+document.getElementById('sizes').innerHTML = SIZES.map(s =>
+  '<div class="row-s"><span>' + s.n + '</span>' +
+  '<span class="bar ' + s.c + '" style="width:' + (s.v / 170 * 100) + '%"></span>' +
+  '<span class="val">' + s.t + '</span></div>').join('');
+</script>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ================= 5. 3D-сурикат ================= */
+const host = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
+renderer.setSize(host.clientWidth, host.clientHeight, false);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+host.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(38, host.clientWidth / host.clientHeight, 0.1, 100);
+cam.position.set(0, 1.5, 5.2);
+cam.lookAt(0, 1.35, 0);
+
+scene.add(new THREE.HemisphereLight(0xfff4e0, 0x6a8f4a, 1.1));
+const key = new THREE.DirectionalLight(0xfff0d0, 2.2); key.position.set(2.5, 4, 3); scene.add(key);
+const rim = new THREE.DirectionalLight(0xffd2a0, 0.8); rim.position.set(-3, 2, -2); scene.add(rim);
+
+const fur = new THREE.MeshStandardMaterial({ color: 0xc98b52, roughness: 0.92 });
+const furDark = new THREE.MeshStandardMaterial({ color: 0xa46b38, roughness: 0.95 });
+const light = new THREE.MeshStandardMaterial({ color: 0xf3e0bd, roughness: 0.95 });
+const dark = new THREE.MeshStandardMaterial({ color: 0x1d1108, roughness: 0.4 });
+
+const meerkat = new THREE.Group();
+const torso = new THREE.Group();      // наклоняется при копании — голова всегда вместе с телом
+meerkat.add(torso);
+
+// туловище
+const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.92, 12, 22), fur);
+body.position.y = 1.3; torso.add(body);
+const belly = new THREE.Mesh(new THREE.CapsuleGeometry(0.18, 0.66, 10, 16), light);
+belly.position.set(0, 1.24, 0.14); belly.scale.set(1, 1, 0.7); torso.add(belly);
+
+// голова
+const headG = new THREE.Group();
+const skull = new THREE.Mesh(new THREE.SphereGeometry(0.35, 24, 18), fur);
+skull.scale.set(1, 0.97, 1.02); headG.add(skull);
+const face = new THREE.Mesh(new THREE.SphereGeometry(0.23, 18, 14), light);
+face.position.set(0, -0.04, 0.2); face.scale.set(1, 0.88, 0.8); headG.add(face);
+const snout = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.11, 0.2, 14), light);
+snout.position.set(0, -0.07, 0.38); snout.rotation.x = Math.PI / 2; headG.add(snout);
+const nose = new THREE.Mesh(new THREE.SphereGeometry(0.048, 10, 8), dark);
+nose.position.set(0, -0.07, 0.47); headG.add(nose);
+[-1, 1].forEach(sd => {
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 10), dark);
+  eye.position.set(0.125 * sd, 0.06, 0.29); headG.add(eye);
+  const ear = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 10), furDark);
+  ear.position.set(0.26 * sd, 0.17, -0.02); ear.scale.set(1, 1, 0.45); headG.add(ear);
+});
+headG.position.set(0, 1.99, 0.03);
+torso.add(headG);
+
+// шея — чтобы голова не висела отдельно
+const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.22, 14), fur);
+neck.position.set(0, 1.82, 0.02); torso.add(neck);
+
+// передние лапки
+const arms = [];
+[-0.19, 0.19].forEach(x => {
+  const a = new THREE.Mesh(new THREE.CapsuleGeometry(0.052, 0.24, 6, 10), furDark);
+  a.position.set(x, 1.5, 0.24); a.rotation.x = -0.45; torso.add(a); arms.push(a);
+});
+
+// хвост
+const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.085, 1.0, 12), furDark);
+tail.position.set(0, 0.62, -0.36); tail.rotation.x = 1.2; torso.add(tail);
+
+// задние лапы
+const legs = [];
+[-0.14, 0.14].forEach(x => {
+  const l = new THREE.Mesh(new THREE.CapsuleGeometry(0.07, 0.42, 8, 12), fur);
+  l.position.set(x, 0.3, 0.02); meerkat.add(l); legs.push(l);
+  const foot = new THREE.Mesh(new THREE.SphereGeometry(0.095, 12, 10), furDark);
+  foot.position.set(x, 0.08, 0.08); foot.scale.set(1, 0.5, 1.5); meerkat.add(foot);
+});
+
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(2.2, 32),
+  new THREE.MeshStandardMaterial({ color: 0xe8d3ac, roughness: 1 })
+);
+ground.rotation.x = -Math.PI / 2; ground.position.y = -0.02;
+scene.add(ground);
+scene.add(meerkat);
+
+let dragging = false, lastX = 0, rotY = 0.4, spin = false, pose = 'stand', t = 0;
+
+host.addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; host.style.cursor = 'grabbing'; });
+addEventListener('pointerup', () => { dragging = false; host.style.cursor = 'grab'; });
+addEventListener('pointermove', e => {
+  if (!dragging) return;
+  rotY += (e.clientX - lastX) * 0.01;
+  lastX = e.clientX;
+});
+
+document.getElementById('poseStand').onclick = () => {
+  pose = 'stand';
+  document.getElementById('poseStand').classList.add('on');
+  document.getElementById('poseDig').classList.remove('on');
+};
+document.getElementById('poseDig').onclick = () => {
+  pose = 'dig';
+  document.getElementById('poseDig').classList.add('on');
+  document.getElementById('poseStand').classList.remove('on');
+};
+document.getElementById('spinBtn').onclick = e => {
+  spin = !spin;
+  e.currentTarget.classList.toggle('on', spin);
+};
+
+function loop(){
+  requestAnimationFrame(loop);
+  t += 0.016;
+
+  if (spin) rotY += 0.006;
+  meerkat.rotation.y = rotY;
+
+  if (pose === 'dig'){
+    torso.rotation.x = 0.5;
+    torso.position.set(0, -0.1, 0.05);
+    headG.rotation.x = -0.3;
+    headG.rotation.y = 0;
+    arms.forEach((a, i) => {
+      a.rotation.x = -1.5 + Math.sin(t * 10 + i * Math.PI) * 0.5;
+      a.position.set(i ? 0.17 : -0.17, 1.16, 0.5);
+    });
+    tail.rotation.x = 0.85;
+  } else {
+    torso.rotation.x = 0;
+    torso.position.set(0, Math.sin(t * 1.6) * 0.012, 0);
+    headG.rotation.x = Math.sin(t * 1.1) * 0.05;
+    headG.rotation.y = Math.sin(t * 0.7) * 0.2;
+    arms.forEach((a, i) => {
+      a.rotation.x = -0.45;
+      a.position.set(i ? 0.19 : -0.19, 1.5, 0.24);
+    });
+    tail.rotation.x = 1.2;
+  }
+
+  renderer.render(scene, cam);
+}
+loop();
+
+function fit(){
+  const w = host.clientWidth || 300, h = host.clientHeight || 220;
+  renderer.setSize(w, h, false);
+  cam.aspect = w / h;
+  cam.updateProjectionMatrix();
+}
+addEventListener('resize', fit);
+addEventListener('load', fit);
+if (window.ResizeObserver) new ResizeObserver(fit).observe(host);
+requestAnimationFrame(fit);
+setTimeout(fit, 400);
+
+window.__SUR = {
+  weather: () => document.getElementById('wxNote').textContent,
+  anatomy: (k) => { const el = document.querySelector('.anat .hit[data-k="' + k + '"]'); if (el) el.click(); return document.getElementById('anatText').textContent; },
+  burrow: (k) => { const el = document.querySelector('.chamber[data-k="' + k + '"]'); if (el) el.click(); return document.getElementById('burrowCap').textContent; },
+  pose: (p) => document.getElementById(p === 'dig' ? 'poseDig' : 'poseStand').click()
+};
+</script>
+</body>
+</html>

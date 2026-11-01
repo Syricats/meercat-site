@@ -41,6 +41,12 @@
   .navlinks{display:flex;gap:22px;margin-left:auto;font-size:15px;color:var(--ink2)}
   .navlinks a{text-decoration:none}
   .navlinks a:hover{color:var(--accent2)}
+  @media(max-width:430px){
+    .nav{height:58px;gap:8px}
+    .navlinks{gap:4px}
+    .navlinks a{padding:6px 8px;font-size:11.5px}
+    .brand img{width:30px;height:30px}
+  }
   .pill{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 16px;
     font-size:14.5px;text-decoration:none;font-weight:600}
   @media(max-width:760px){.navlinks{display:none}}
@@ -172,6 +178,17 @@
     .hero-inner{padding:46px 20px 52px}
     .hero-cap{right:14px;bottom:10px;font-size:11px}
   }
+
+  /* компактная верхняя панель на телефоне */
+  @media(max-width:480px){
+    header .nav,header .navlinks{height:56px;gap:6px}
+    header .brand img{width:26px;height:26px}
+    header .brand span{display:none}
+    header .navlinks,header .subnav{gap:4px}
+    header .navlinks a,header .subnav a{padding:6px 7px;font-size:11px;border-radius:10px}
+  }
+  header .nav,header .navlinks{overflow-x:auto;scrollbar-width:none}
+  header .nav::-webkit-scrollbar,header .navlinks::-webkit-scrollbar{display:none}
 </style>
 
 <style>
@@ -244,6 +261,7 @@
       <a href="novosti.html">Новости</a>
       <a href="zvezdy.html">Звёзды</a>
       <a href="karta.html">Карта</a>
+      <a href="surikat.html">Сурикат</a>
     </nav>
   </div>
 </header>

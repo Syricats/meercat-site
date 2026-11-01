@@ -50,6 +50,17 @@
     .hintbar{display:none}
     .maplibregl-ctrl-bottom-left{bottom:8px}
   }
+
+  /* компактная верхняя панель на телефоне */
+  @media(max-width:480px){
+    header .nav,header .navlinks{height:56px;gap:6px}
+    header .brand img{width:26px;height:26px}
+    header .brand span{display:none}
+    header .navlinks,header .subnav{gap:4px}
+    header .navlinks a,header .subnav a{padding:6px 7px;font-size:11px;border-radius:10px}
+  }
+  header .nav,header .navlinks{overflow-x:auto;scrollbar-width:none}
+  header .nav::-webkit-scrollbar,header .navlinks::-webkit-scrollbar{display:none}
 </style>
 </head>
 <body>
@@ -61,7 +72,7 @@
   <a href="igra.html">Игры</a>
   <a href="novosti.html">Новости</a>
   <a href="zvezdy.html">Звёзды</a>
-  <a href="karta.html" class="on">Карта</a>
+  <a href="karta.html" class="on">Карта</a><a href="surikat.html">Сурикат</a>
   <span class="spacer"></span>
 </header>
 
